@@ -1,1 +1,1 @@
-rootProject.name = "ktor-sample"
+rootProject.name = "hdt-creation-service"
