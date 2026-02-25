@@ -1,7 +1,6 @@
 package com.example.com.util
 
 import io.github.whdt.core.hdt.HumanDigitalTwin
-import io.github.whdt.core.hdt.interfaces.digital.HttpDigitalInterface
 import io.github.whdt.core.hdt.interfaces.digital.MqttDigitalInterface
 import io.github.whdt.core.hdt.interfaces.physical.MqttPhysicalInterface
 import io.github.whdt.core.hdt.model.Model
@@ -24,18 +23,5 @@ object HdtUtils {
             physicalInterfaces = listOf(pI),
             digitalInterfaces = listOf(dI),
         )
-    }
-    fun setupHdt(hdt: HumanDigitalTwin): HumanDigitalTwin {
-        HdtRegistry.register(hdt.hdtId.id)
-        if(hdt.digitalInterfaces.any { it !is HttpDigitalInterface }) {
-            val httpDI = HttpDigitalInterface(
-                hdtId = hdt.hdtId,
-                host = HdtRegistry.HDT_HTTP_HOST,
-                port = HdtRegistry.getPort(hdt.hdtId.id)!!,
-                id = "${hdt.hdtId}-http-di",
-            )
-            return hdt.copy(digitalInterfaces = hdt.digitalInterfaces + httpDI)
-        }
-        return hdt
     }
 }
