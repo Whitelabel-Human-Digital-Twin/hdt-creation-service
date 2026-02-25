@@ -45,7 +45,6 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:$logback_version")
 
     implementation("io.github.whdt:whdt-core:0.4.0")
-    implementation("io.github.whdt:whdt-wldt-plugin:0.4.0")
     implementation("io.github.whdt:whdt-distributed:0.2.0")
     implementation("io.github.whdt:whdt-csv-parser:0.1.2")
     implementation("com.google.code.gson:gson:2.13.1")
