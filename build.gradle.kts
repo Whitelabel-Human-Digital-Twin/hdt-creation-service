@@ -51,6 +51,9 @@ dependencies {
 
     testImplementation("io.ktor:ktor-server-test-host")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
+
+    // Apache POI for Excel processing
+    implementation("org.apache.poi:poi-ooxml:5.4.0")
 }
 
 kotlin {
