@@ -16,7 +16,7 @@ object HdtUtils {
         val dI = MqttDigitalInterface(
             hdtId = hdtId,
         )
-        val model = Model(properties)
+        val model = Model("model-1", "basic-model", properties)
         return HumanDigitalTwin(
             hdtId = hdtId,
             models = listOf(model),

@@ -2,9 +2,9 @@ val kotlin_version: String by project
 val logback_version: String by project
 
 plugins {
-    kotlin("jvm") version "2.1.10"
+    kotlin("jvm") version "2.3.10"
     id("io.ktor.plugin") version "3.2.1"
-    kotlin("plugin.serialization") version "2.1.10"
+    kotlin("plugin.serialization") version "2.3.10"
 }
 
 group = "com.example.com"
@@ -44,8 +44,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
     implementation("ch.qos.logback:logback-classic:$logback_version")
 
-    implementation("io.github.whdt:whdt-core:0.4.0")
-    implementation("io.github.whdt:whdt-distributed:0.2.0")
+    implementation("io.github.whdt:whdt-core:0.5.0")
+    implementation("io.github.whdt:whdt-distributed:0.2.1")
     implementation("io.github.whdt:whdt-csv-parser:0.1.2")
     implementation("com.google.code.gson:gson:2.13.1")
 
