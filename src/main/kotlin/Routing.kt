@@ -1,8 +1,9 @@
 package com.example.com
 
+import com.example.com.mimosa.Mapper
 import com.example.com.mimosa.ParserMimosa.parseMimosaWorkbook
-import com.example.com.util.HdtFactory
 import com.example.com.util.HdtUtils
+import io.github.whdt.core.hdt.model.id.HdtId
 import io.github.whdt.csv.parser.ParserCSV
 import io.github.whdt.distributed.serde.Stub
 import io.ktor.client.*
@@ -11,11 +12,7 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import io.ktor.http.content.MultiPartData
-import io.ktor.http.content.PartData
-import io.ktor.http.content.asFlow
-import io.ktor.http.content.forEachPart
-import io.ktor.http.content.streamProvider
+import io.ktor.http.content.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -83,9 +80,9 @@ fun Application.configureRouting() {
                 fieldName = "file",
                 maxBytes = 30L * 1024 * 1024
             ) ?: return@post call.respond(HttpStatusCode.BadRequest, "Missing field 'file'")
-
             try {
-                val result = withContext(Dispatchers.IO) { parseMimosaWorkbook(tempPath) }
+                val wr = withContext(Dispatchers.IO) { parseMimosaWorkbook(tempPath) }
+                val result = Mapper.workbookResultToHDTs(wr, makeHdtId = HdtId::of)
                 call.respond(HttpStatusCode.OK, result)
             } finally {
                 tempPath.deleteIfExists()
