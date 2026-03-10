@@ -1,10 +1,16 @@
 package com.example.com.mimosa
 
+import io.github.whdt.core.hdt.HdtId
 import io.github.whdt.core.hdt.HumanDigitalTwin
 import io.github.whdt.core.hdt.model.Model
-import io.github.whdt.core.hdt.model.id.HdtId
+import io.github.whdt.core.hdt.model.ModelDescription
+import io.github.whdt.core.hdt.model.ModelId
+import io.github.whdt.core.hdt.model.ModelName
 import io.github.whdt.core.hdt.model.property.Property
+import io.github.whdt.core.hdt.model.property.PropertyDescription
+import io.github.whdt.core.hdt.model.property.PropertyName
 import io.github.whdt.core.hdt.model.property.PropertyValue
+import io.github.whdt.core.hdt.model.property.PropertyValue.Companion.pv
 import kotlin.time.Clock
 import kotlin.time.Instant
 
@@ -17,11 +23,11 @@ object Mapper {
             .replace(Regex("\\s+"), "_")
             .replace(Regex("[^a-z0-9_\\-]"), "")
 
-    private fun sheetToModelId(sheetName: String): String =
-        normalizeKey(sheetName)
-
-    private fun columnToPropertyId(sheetName: String, columnName: String): String =
-        "${sheetToModelId(sheetName)}:${normalizeKey(columnName)}"
+    private fun sheetToModelId(patientId: String, sheetName: String): ModelId {
+        val nPatient = normalizeKey(patientId)
+        val nModel = normalizeKey(sheetName)
+        return ModelId("$nPatient:$nModel")
+    }
 
     private fun toPropertyValue(raw: String): PropertyValue {
         val s = raw.trim()
@@ -29,22 +35,22 @@ object Mapper {
 
         val lower = s.lowercase()
         if (lower == "true" || lower == "false") {
-            return PropertyValue.BooleanPropertyValue(lower.toBoolean())
+            return lower.toBoolean().pv()
         }
 
         // common in CRFs: 0/1 used as boolean
         if (s == "0" || s == "1") {
-            return PropertyValue.BooleanPropertyValue(s == "1")
+            return (s == "1").pv()
         }
 
-        s.toIntOrNull()?.let { return PropertyValue.IntPropertyValue(it) }
-        s.toLongOrNull()?.let { return PropertyValue.LongPropertyValue(it) }
+        s.toIntOrNull()?.let { return it.pv() }
+        s.toLongOrNull()?.let { return it.pv() }
 
         // handle commas as decimal separators if needed
         val normalized = s.replace(',', '.')
-        normalized.toDoubleOrNull()?.let { return PropertyValue.DoublePropertyValue(it) }
+        normalized.toDoubleOrNull()?.let { return it.pv() }
 
-        return PropertyValue.StringPropertyValue(s)
+        return s.pv()
     }
 
     fun workbookResultToHDTs(
@@ -70,15 +76,13 @@ object Mapper {
 
         // 2) build an HDT per patient
         return byPatient.map { (patientId, sheetRows) ->
-            val hdtId = makeHdtId(patientId)
-
+            val hdtId = makeHdtId(normalizeKey(patientId))
             // group the patient’s rows by sheet, then turn each sheet into a model
             val models: List<Model> =
                 sheetRows
                     .groupBy { it.sheet }
                     .map { (sheetName, rowsInSheet) ->
-                        // In your file, there should be 1 row per patient per sheet.
-                        // If there are duplicates, we can merge (later row overwrites earlier).
+                        val modelId = sheetToModelId(patientId, sheetName)
                         val merged: Map<String, String> =
                             rowsInSheet.fold(emptyMap()) { acc, sr -> acc + sr.row }
 
@@ -87,21 +91,22 @@ object Mapper {
                             .filterKeys { it != PATIENT_ID_HEADER } // don’t turn patient id into a property
                             .map { (colName, rawValue) ->
                                 Property(
-                                    name = colName,
-                                    id = columnToPropertyId(sheetName, colName),
-                                    description = "From sheet '$sheetName', column '$colName'",
+                                    name = PropertyName(normalizeKey(colName)),
+                                    modelId = modelId,
+                                    description = PropertyDescription("From sheet '$sheetName', column '$colName'"),
                                     timestamp = now,
                                     value = toPropertyValue(rawValue)
                                 )
                             }
 
                         Model(
-                            id = sheetToModelId(sheetName),
-                            description = "Imported from Excel sheet '$sheetName'",
+                            hdtId = hdtId,
+                            name = ModelName(normalizeKey(sheetName)),
+                            description = ModelDescription("Imported from Excel sheet '$sheetName'"),
                             properties = properties
                         )
                     }
-                    .sortedBy { it.id } // stable ordering
+                    .sortedBy { it.id.value } // stable ordering
 
             HumanDigitalTwin(
                 hdtId = hdtId,

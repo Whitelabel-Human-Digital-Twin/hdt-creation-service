@@ -2,13 +2,11 @@ package com.example.com
 
 import com.example.com.mimosa.Mapper
 import com.example.com.mimosa.ParserMimosa.parseMimosaWorkbook
-import io.github.whdt.core.hdt.model.id.HdtId
+import io.github.whdt.core.hdt.HdtId
 import io.github.whdt.distributed.serde.Stub
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.serialization.kotlinx.json.*
@@ -39,8 +37,8 @@ fun Application.configureRouting() {
             ) ?: return@post call.respond(HttpStatusCode.BadRequest, "Missing field 'file'")
             try {
                 val wr = withContext(Dispatchers.IO) { parseMimosaWorkbook(tempPath) }
-                Mapper.workbookResultToHDTs(wr, makeHdtId = HdtId::of)
-                    .forEach {
+                val hdts = Mapper.workbookResultToHDTs(wr, makeHdtId = { HdtId(it) })
+                    /*.forEach {
                         try {
                             val response = client.post("http://localhost:8081/api/hdts") {
                                 contentType(ContentType.Application.Json)
@@ -54,7 +52,12 @@ fun Application.configureRouting() {
                             println("EXCEPTION CALLING DB SERVICE:")
                             e.printStackTrace()
                         }
-                    }
+                    }*/
+                println("Parsed HDTs:")
+                hdts.forEach {
+                    val s = Stub.hdtJsonSerDe().serialize(it)
+                    println("${it.hdtId}:\t$s")
+                }
 
                 // For now, just respond with success
                 call.respondText("CSV received successfully", status = HttpStatusCode.OK)
