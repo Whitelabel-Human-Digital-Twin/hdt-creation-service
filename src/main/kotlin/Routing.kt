@@ -7,6 +7,7 @@ import io.github.whdt.distributed.serde.Stub
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.serialization.kotlinx.json.*
@@ -28,8 +29,7 @@ fun Application.configureRouting() {
     }
 
     routing {
-
-        post("api/v2/hdt") {
+        post("api/hdts/multipart") {
             val mp = call.receiveMultipart()
             val tempPath = mp.readPartAsTempFile(
                 fieldName = "file",
@@ -38,26 +38,13 @@ fun Application.configureRouting() {
             try {
                 val wr = withContext(Dispatchers.IO) { parseMimosaWorkbook(tempPath) }
                 val hdts = Mapper.workbookResultToHDTs(wr, makeHdtId = { HdtId(it) })
-                    /*.forEach {
-                        try {
-                            val response = client.post("http://localhost:8081/api/hdts") {
-                                contentType(ContentType.Application.Json)
-                                setBody(it)
-                            }
 
-                            println("Response status: ${response.status}")
-                            println("Response body: ${response.bodyAsText()}")
-
-                        } catch (e: Exception) {
-                            println("EXCEPTION CALLING DB SERVICE:")
-                            e.printStackTrace()
-                        }
-                    }*/
-                println("Parsed HDTs:")
-                hdts.forEach {
-                    val s = Stub.hdtJsonSerDe().serialize(it)
-                    println("${it.hdtId}:\t$s")
+                val response = client.post("http://localhost:8081/api/hdts/many") {
+                    contentType(ContentType.Application.Json)
+                    setBody(hdts)
                 }
+
+                if (!response.status.isSuccess()) return@post call.respond(HttpStatusCode.InternalServerError, "Unexpected response from server")
 
                 // For now, just respond with success
                 call.respondText("CSV received successfully", status = HttpStatusCode.OK)
