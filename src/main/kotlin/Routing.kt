@@ -39,7 +39,7 @@ fun Application.configureRouting() {
                 val wr = withContext(Dispatchers.IO) { parseMimosaWorkbook(tempPath) }
                 val hdts = Mapper.workbookResultToHDTs(wr, makeHdtId = { HdtId(it) })
 
-                val response = client.post("http://localhost:8081/api/hdts/many") {
+                val response = client.put("http://localhost:8081/api/hdts/many") {
                     contentType(ContentType.Application.Json)
                     setBody(hdts)
                 }
