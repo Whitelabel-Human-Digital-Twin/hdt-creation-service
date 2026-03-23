@@ -11,8 +11,12 @@ import io.github.whdt.core.hdt.model.property.PropertyDescription
 import io.github.whdt.core.hdt.model.property.PropertyName
 import io.github.whdt.core.hdt.model.property.PropertyValue
 import io.github.whdt.core.hdt.model.property.PropertyValue.Companion.pv
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import kotlin.time.Clock
 import kotlin.time.Instant
+import kotlin.time.toKotlinInstant
 
 object Mapper {
     private const val PATIENT_ID_HEADER = "ID PAZIENTE"
@@ -53,6 +57,16 @@ object Mapper {
         return s.pv()
     }
 
+    private fun String.toKotlinInstant(): Instant? {
+        val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
+        try {
+            val dateStr = LocalDate.parse(this, formatter)
+            return dateStr.atStartOfDay(ZoneId.systemDefault())?.toInstant()?.toKotlinInstant()
+        } catch (_: Exception) {
+            return null
+        }
+    }
+
     fun workbookResultToHDTs(
         workbook: WorkbookResult,
         now: Instant = Clock.System.now(),
@@ -86,18 +100,25 @@ object Mapper {
                         val merged: Map<String, String> =
                             rowsInSheet.fold(emptyMap()) { acc, sr -> acc + sr.row }
 
-                        val properties = merged
+                        val propertiesRaw = merged
                             .filterKeys { it.trim().isNotEmpty() }
                             .filterKeys { it != PATIENT_ID_HEADER } // don’t turn patient id into a property
-                            .map { (colName, rawValue) ->
-                                Property(
-                                    name = PropertyName(normalizeKey(colName)),
-                                    modelId = modelId,
-                                    description = PropertyDescription("From sheet '$sheetName', column '$colName'"),
-                                    timestamp = now,
-                                    value = toPropertyValue(rawValue)
-                                )
-                            }
+
+                        val properties = propertiesRaw.map { (colName, rawValue) ->
+                            val time = propertiesRaw
+                                .filterKeys { it.startsWith("data") }
+                                .values
+                                .first()
+                                .toKotlinInstant()
+
+                            Property(
+                                name = PropertyName(normalizeKey(colName)),
+                                modelId = modelId,
+                                description = PropertyDescription("From sheet '$sheetName', column '$colName'"),
+                                timestamp = time?:now,
+                                value = toPropertyValue(rawValue)
+                            )
+                        }
 
                         Model(
                             hdtId = hdtId,
