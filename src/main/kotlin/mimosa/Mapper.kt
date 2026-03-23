@@ -58,12 +58,19 @@ object Mapper {
     }
 
     private fun String.toKotlinInstant(): Instant? {
-        val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
-        try {
-            val dateStr = LocalDate.parse(this, formatter)
-            return dateStr.atStartOfDay(ZoneId.systemDefault())?.toInstant()?.toKotlinInstant()
-        } catch (_: Exception) {
-            return null
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        val value = this.trim()
+
+        return try {
+            println("Parsing date string: '$value'")
+            val date = LocalDate.parse(value, formatter)
+            println("Parsed LocalDate: $date")
+            date.atStartOfDay(ZoneId.systemDefault())
+                .toInstant()
+                .toKotlinInstant()
+        } catch (e: Exception) {
+            println("Failed to parse '$value': ${e.message}")
+            null
         }
     }
 
@@ -102,20 +109,22 @@ object Mapper {
 
                         val propertiesRaw = merged
                             .filterKeys { it.trim().isNotEmpty() }
-                            .filterKeys { it != PATIENT_ID_HEADER } // don’t turn patient id into a property
+                            .filterKeys { it.trim() != PATIENT_ID_HEADER } // don’t turn patient id into a property
+
+                        val time = propertiesRaw
+                            .entries
+                            .firstOrNull { normalizeKey(it.key).startsWith("data_", ignoreCase = true) }
+                            ?.value
+                            ?.also { println("Matched date value: '$it'") }
+                            ?.toKotlinInstant()
+                            ?: now
 
                         val properties = propertiesRaw.map { (colName, rawValue) ->
-                            val time = propertiesRaw
-                                .filterKeys { it.startsWith("data") }
-                                .values
-                                .first()
-                                .toKotlinInstant()
-
                             Property(
                                 name = PropertyName(normalizeKey(colName)),
                                 modelId = modelId,
                                 description = PropertyDescription("From sheet '$sheetName', column '$colName'"),
-                                timestamp = time?:now,
+                                timestamp = time,
                                 value = toPropertyValue(rawValue)
                             )
                         }
