@@ -1,4 +1,4 @@
-package com.example.com.crf.importer.model
+package io.github.whdt.crf.importer.model
 
 data class RawWorkbook(
     val sheets: List<RawSheet>

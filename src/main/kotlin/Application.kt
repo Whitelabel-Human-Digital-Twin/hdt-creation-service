@@ -1,14 +1,13 @@
-package com.example.com
-
 import io.github.whdt.distributed.serde.Stub
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
+import io.ktor.server.netty.EngineMain
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.cors.routing.*
 
 fun main(args: Array<String>) {
-    io.ktor.server.netty.EngineMain.main(args)
+    EngineMain.main(args)
 }
 
 fun Application.module() {

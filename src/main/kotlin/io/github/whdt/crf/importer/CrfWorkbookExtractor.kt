@@ -1,8 +1,8 @@
-package com.example.com.crf.importer
+package io.github.whdt.crf.importer
 
-import com.example.com.crf.importer.model.RawRow
-import com.example.com.crf.importer.model.RawSheet
-import com.example.com.crf.importer.model.RawWorkbook
+import io.github.whdt.crf.importer.model.RawRow
+import io.github.whdt.crf.importer.model.RawSheet
+import io.github.whdt.crf.importer.model.RawWorkbook
 import org.apache.poi.ss.usermodel.DataFormatter
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import java.io.InputStream

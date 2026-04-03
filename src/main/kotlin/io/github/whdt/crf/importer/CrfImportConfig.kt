@@ -1,4 +1,4 @@
-package com.example.com.crf.importer
+package io.github.whdt.crf.importer
 
 data class CrfImportConfig(
     val excludedSheetNames: Set<String> = emptySet(),

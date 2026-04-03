@@ -1,7 +1,7 @@
-package com.example.com.crf
+package io.github.whdt.crf
 
-import com.example.com.crf.importer.model.ParsedVisitRow
-import com.example.com.crf.parser.CrfValueParser
+import io.github.whdt.crf.importer.model.ParsedVisitRow
+import io.github.whdt.crf.parser.CrfValueParser
 import io.github.whdt.core.hdt.HdtId
 import io.github.whdt.core.hdt.HumanDigitalTwin
 import io.github.whdt.core.hdt.model.Model

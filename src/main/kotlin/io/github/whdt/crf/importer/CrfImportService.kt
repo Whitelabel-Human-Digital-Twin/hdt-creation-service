@@ -1,11 +1,12 @@
-package com.example.com.crf.importer
+package io.github.whdt.crf.importer
 
-import com.example.com.crf.CrfDomainAssembler
-import com.example.com.crf.importer.model.CrfImportResult
-import com.example.com.crf.importer.model.ImportLogEntry
-import com.example.com.crf.importer.model.ImportReport
-import com.example.com.crf.importer.model.ParsedVisitRow
-import com.example.com.crf.interpreter.CrfSheetInterpreter
+import io.github.whdt.crf.importer.CrfWorkbookExtractor
+import io.github.whdt.crf.CrfDomainAssembler
+import io.github.whdt.crf.importer.model.CrfImportResult
+import io.github.whdt.crf.importer.model.ImportLogEntry
+import io.github.whdt.crf.importer.model.ImportReport
+import io.github.whdt.crf.importer.model.ParsedVisitRow
+import io.github.whdt.crf.interpreter.CrfSheetInterpreter
 import java.io.InputStream
 
 class CrfImportService(

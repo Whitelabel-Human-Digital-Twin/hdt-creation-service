@@ -1,14 +1,15 @@
-package com.example.com.crf.interpreter
+package io.github.whdt.crf.interpreter
 
-import com.example.com.crf.importer.ColumnResolver
-import com.example.com.crf.importer.CrfImportConfig
-import com.example.com.crf.importer.CrfNameNormalizer
-import com.example.com.crf.importer.model.ImportLogEntry
-import com.example.com.crf.importer.model.ImportSeverity
-import com.example.com.crf.importer.model.ParsedPropertyCell
-import com.example.com.crf.importer.model.ParsedVisitRow
-import com.example.com.crf.importer.model.RawRow
-import com.example.com.crf.importer.model.RawSheet
+import io.github.whdt.crf.importer.ColumnResolver
+import io.github.whdt.crf.importer.CrfImportConfig
+import io.github.whdt.crf.importer.CrfNameNormalizer
+import io.github.whdt.crf.importer.model.ImportLogEntry
+import io.github.whdt.crf.importer.model.ImportSeverity
+import io.github.whdt.crf.importer.model.ParsedPropertyCell
+import io.github.whdt.crf.importer.model.ParsedVisitRow
+import io.github.whdt.crf.importer.model.RawRow
+import io.github.whdt.crf.importer.model.RawSheet
+import kotlin.collections.get
 import kotlin.time.Instant
 
 class CrfSheetInterpreter(

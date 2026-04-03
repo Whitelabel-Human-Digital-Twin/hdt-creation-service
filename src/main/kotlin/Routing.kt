@@ -1,8 +1,6 @@
-package com.example.com
-
-import com.example.com.crf.importer.CrfImportConfig
-import com.example.com.crf.importer.CrfImportService
-import com.example.com.crf.importer.util.readPartAsTempFile
+import io.github.whdt.crf.importer.CrfImportConfig
+import io.github.whdt.crf.importer.CrfImportService
+import io.github.whdt.crf.importer.util.readPartAsTempFile
 import io.github.whdt.distributed.serde.Stub
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*

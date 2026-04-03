@@ -1,4 +1,4 @@
-package com.example.com.crf.importer.util
+package io.github.whdt.crf.importer.util
 
 import org.apache.poi.ss.usermodel.Cell
 import org.apache.poi.ss.usermodel.DateUtil

@@ -7,7 +7,7 @@ plugins {
     kotlin("plugin.serialization") version "2.3.10"
 }
 
-group = "com.example.com"
+group = "io.github.whdt"
 version = "0.0.1"
 
 application {

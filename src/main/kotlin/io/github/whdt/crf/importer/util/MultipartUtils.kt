@@ -1,4 +1,4 @@
-package com.example.com.crf.importer.util
+package io.github.whdt.crf.importer.util
 
 import io.ktor.http.content.MultiPartData
 import io.ktor.http.content.PartData

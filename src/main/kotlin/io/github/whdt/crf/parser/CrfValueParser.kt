@@ -1,4 +1,4 @@
-package com.example.com.crf.parser
+package io.github.whdt.crf.parser
 
 import io.github.whdt.core.hdt.model.property.PropertyValue
 import io.github.whdt.core.hdt.model.property.PropertyValue.Companion.pv

@@ -1,7 +1,7 @@
-package com.example.com.crf.importer
+package io.github.whdt.crf.importer
 
-import com.example.com.crf.importer.model.ImportLogEntry
-import com.example.com.crf.importer.model.ImportSeverity
+import io.github.whdt.crf.importer.model.ImportLogEntry
+import io.github.whdt.crf.importer.model.ImportSeverity
 
 
 class ColumnResolver(
