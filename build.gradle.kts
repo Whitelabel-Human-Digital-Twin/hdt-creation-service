@@ -44,7 +44,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
     implementation("ch.qos.logback:logback-classic:$logback_version")
 
-    implementation("io.github.whdt:whdt-core:0.6.1")
+    implementation("io.github.whdt:whdt-core:0.6.2")
     implementation("io.github.whdt:whdt-distributed:0.3.0")
     implementation("com.google.code.gson:gson:2.13.1")
 

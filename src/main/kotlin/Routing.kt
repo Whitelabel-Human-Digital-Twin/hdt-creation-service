@@ -1,24 +1,18 @@
 package com.example.com
 
-import com.example.com.mimosa.Mapper
-import com.example.com.mimosa.ParserMimosa.parseMimosaWorkbook
-import io.github.whdt.core.hdt.HdtId
+import com.example.com.crf.importer.CrfImportConfig
+import com.example.com.crf.importer.CrfImportService
+import com.example.com.crf.importer.util.readPartAsTempFile
 import io.github.whdt.distributed.serde.Stub
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.request.*
 import io.ktor.http.*
-import io.ktor.http.content.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import java.nio.file.Files
-import java.nio.file.Path
 import kotlin.io.path.deleteIfExists
 
 fun Application.configureRouting() {
@@ -31,62 +25,33 @@ fun Application.configureRouting() {
     routing {
         post("api/hdts/multipart") {
             val mp = call.receiveMultipart()
-            val tempPath = mp.readPartAsTempFile(
+            val tempFile = mp.readPartAsTempFile(
                 fieldName = "file",
                 maxBytes = 30L * 1024 * 1024
             ) ?: return@post call.respond(HttpStatusCode.BadRequest, "Missing field 'file'")
-            try {
-                val wr = withContext(Dispatchers.IO) { parseMimosaWorkbook(tempPath) }
-                val hdts = Mapper.workbookResultToHDTs(wr, makeHdtId = { HdtId(it) })
 
-                val response = client.put("http://localhost:8081/api/hdts/many") {
+            try {
+                val service = CrfImportService(
+                    config = CrfImportConfig(
+                        excludedSheetNames = setOf("sigle", "legend", "legenda")
+                    ),
+                )
+                val result = tempFile.toFile().inputStream().use { input ->
+                    service.import(input)
+                }
+                /*val response = client.put("http://localhost:8081/api/hdts/many") {
                     contentType(ContentType.Application.Json)
-                    setBody(hdts)
+                    setBody(result.hdts)
                 }
 
                 if (!response.status.isSuccess()) return@post call.respond(HttpStatusCode.InternalServerError, "Unexpected response from server")
-
-                // For now, just respond with success
+*/
+                result.hdts.forEach { println(Stub.hdtJsonSerDe().serialize(it)) }
+                println(result.report.toString())
                 call.respondText("CSV received successfully", status = HttpStatusCode.OK)
             } finally {
-                tempPath.deleteIfExists()
+                tempFile.deleteIfExists()
             }
         }
     }
-}
-
-suspend fun MultiPartData.readPartAsTempFile(
-    fieldName: String,
-    maxBytes: Long
-): Path? {
-    var tempFile: Path? = null
-    forEachPart { part ->
-        try {
-            if (part is PartData.FileItem && part.name == fieldName) {
-                val fileName = part.originalFileName ?: "upload.xlsx"
-                tempFile = Files.createTempFile("upload-", "-$fileName")
-                var written = 0L
-                Files.newOutputStream(tempFile!!).use { output ->
-                    part.streamProvider().use { input ->
-                        val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
-
-                        while (true) {
-                            val read = input.read(buffer)
-                            if (read <= 0) break
-
-                            written += read
-                            if (written > maxBytes) {
-                                throw IllegalArgumentException("File too large")
-                            }
-
-                            output.write(buffer, 0, read)
-                        }
-                    }
-                }
-            }
-        } finally {
-            part.dispose()
-        }
-    }
-    return tempFile
 }
