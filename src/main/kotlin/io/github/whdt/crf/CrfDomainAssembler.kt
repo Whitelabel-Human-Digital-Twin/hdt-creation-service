@@ -1,7 +1,5 @@
 package io.github.whdt.crf
 
-import io.github.whdt.crf.importer.model.ParsedVisitRow
-import io.github.whdt.crf.parser.CrfValueParser
 import io.github.whdt.core.hdt.HdtId
 import io.github.whdt.core.hdt.HumanDigitalTwin
 import io.github.whdt.core.hdt.model.Model
@@ -11,7 +9,13 @@ import io.github.whdt.core.hdt.model.ModelName
 import io.github.whdt.core.hdt.model.property.Property
 import io.github.whdt.core.hdt.model.property.PropertyDescription
 import io.github.whdt.core.hdt.model.property.PropertyName
+import io.github.whdt.core.hdt.model.property.PropertyValue
+import io.github.whdt.crf.importer.model.ParsedVisitRow
+import io.github.whdt.crf.parser.CrfValueParser
+import io.github.whdt.crf.parser.ValueUtils.toKotlinInstantOfPattern
 import kotlin.time.Clock
+import kotlin.time.DurationUnit
+import kotlin.time.Instant
 
 class CrfDomainAssembler(
     private val valueParser: CrfValueParser = CrfValueParser(),
@@ -33,6 +37,7 @@ class CrfDomainAssembler(
                     models = models,
                 )
             }
+            .map { fillMetadata(it) }
             .sortedBy { it.hdtId.toString() }
     }
 
@@ -53,6 +58,35 @@ class CrfDomainAssembler(
                     metadata = emptyMap(),
                 )
             }
+        )
+    }
+
+    private fun fillMetadata(hdt: HumanDigitalTwin): HumanDigitalTwin {
+        fun PropertyValue.unwrapInstant(): Instant? {
+            return when (this) {
+                is PropertyValue.StringPropertyValue -> this.value.toKotlinInstantOfPattern("yyyy-MM-dd")
+                else -> null
+            }
+        }
+        val baselineModel = hdt.models.find { it.name.value == "baseline" }
+        if (baselineModel == null) { return hdt }
+        val expectedBirth = baselineModel
+            .properties
+            .find { it.name.value == "epoca_presunta_parto" }
+            ?.value
+            ?.unwrapInstant()
+        if (expectedBirth == null) { return hdt }
+        val actualBirth = baselineModel
+            .properties
+            .find { it.name.value == "data_di_nascita" }
+            ?.value
+            ?.unwrapInstant()
+        if (actualBirth == null) { return hdt }
+        val deltaAge = expectedBirth - actualBirth
+        return hdt.copy(
+            metadata = mapOf(
+                "delta_age" to deltaAge.toDouble(DurationUnit.DAYS).toString(),
+            )
         )
     }
 }
