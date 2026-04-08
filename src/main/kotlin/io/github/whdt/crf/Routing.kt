@@ -1,3 +1,5 @@
+package io.github.whdt.crf
+
 import io.github.whdt.crf.importer.CrfImportConfig
 import io.github.whdt.crf.importer.CrfImportService
 import io.github.whdt.crf.importer.util.readPartAsTempFile
@@ -5,6 +7,8 @@ import io.github.whdt.distributed.serde.Stub
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.request.put
+import io.ktor.client.request.setBody
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
@@ -37,13 +41,13 @@ fun Application.configureRouting() {
                 val result = tempFile.toFile().inputStream().use { input ->
                     service.import(input)
                 }
-                /*val response = client.put("http://localhost:8081/api/hdts/many") {
+                val response = client.put("http://localhost:8081/hdts/batch") {
                     contentType(ContentType.Application.Json)
                     setBody(result.hdts)
                 }
 
                 if (!response.status.isSuccess()) return@post call.respond(HttpStatusCode.InternalServerError, "Unexpected response from server")
-*/
+
                 result.hdts.forEach { println(Stub.hdtJsonSerDe().serialize(it)) }
                 println(result.report.toString())
                 call.respondText("CSV received successfully", status = HttpStatusCode.OK)

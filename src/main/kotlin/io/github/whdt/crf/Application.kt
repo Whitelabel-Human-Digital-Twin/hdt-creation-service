@@ -1,3 +1,5 @@
+package io.github.whdt.crf
+
 import io.github.whdt.distributed.serde.Stub
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
