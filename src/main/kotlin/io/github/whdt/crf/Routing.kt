@@ -2,19 +2,23 @@ package io.github.whdt.crf
 
 import io.github.whdt.crf.importer.CrfImportConfig
 import io.github.whdt.crf.importer.CrfImportService
+import io.github.whdt.crf.importer.util.ImportLoggingUtils
 import io.github.whdt.crf.importer.util.readPartAsTempFile
 import io.github.whdt.distributed.serde.Stub
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.request.put
-import io.ktor.client.request.setBody
+import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
+import java.nio.file.Files
 import kotlin.io.path.deleteIfExists
 
 fun Application.configureRouting() {
@@ -41,15 +45,43 @@ fun Application.configureRouting() {
                 val result = tempFile.toFile().inputStream().use { input ->
                     service.import(input)
                 }
+
+                withContext(Dispatchers.IO) {
+                    try {
+                        val logDir = ImportLoggingUtils.createLogDir()
+                        val ts = ImportLoggingUtils.timestamp()
+
+                        val jsonFile = logDir.resolve("output_$ts.json")
+                        val reportFile = logDir.resolve("report_$ts.txt")
+
+                        // JSON output
+                        val json = Json {
+                            prettyPrint = true
+                            encodeDefaults = true
+                        }
+                        Files.writeString(
+                            jsonFile,
+                            json.encodeToString(result.hdts)
+                        )
+
+                        // Human readable report
+                        Files.writeString(
+                            reportFile,
+                            ImportLoggingUtils.reportToText(result.report)
+                        )
+
+                    } catch (e: Exception) {
+                        // Do NOT fail request for logging issues
+                        println("Logging failed: ${e.message}")
+                    }
+                }
+
                 val response = client.put("http://localhost:8081/hdts/batch") {
                     contentType(ContentType.Application.Json)
                     setBody(result.hdts)
                 }
 
                 if (!response.status.isSuccess()) return@post call.respond(HttpStatusCode.InternalServerError, "Unexpected response from server")
-
-                result.hdts.forEach { println(Stub.hdtJsonSerDe().serialize(it)) }
-                println(result.report.toString())
                 call.respondText("CSV received successfully", status = HttpStatusCode.OK)
             } finally {
                 tempFile.deleteIfExists()
