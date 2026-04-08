@@ -1,6 +1,6 @@
 ktor:
     application:
         modules:
-            - io.github.whdt.crf.ApplicationKt.modulemodule
+            - io.github.whdt.crf.ApplicationKt.module
     deployment:
         port: 8080
