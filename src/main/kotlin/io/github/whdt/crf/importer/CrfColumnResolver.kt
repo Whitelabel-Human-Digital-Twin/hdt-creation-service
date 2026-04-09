@@ -46,7 +46,7 @@ class ColumnResolver(
             return Result(exactMatches.keys.first(), logs)
         }
 
-        // 2. Pattern fallback
+        /* 2. Pattern fallback
         val patternMatches = normalizedHeaders.filter { (_, h) ->
             patterns.any { it(h) }
         }
@@ -61,7 +61,7 @@ class ColumnResolver(
                 )
             }
             return Result(patternMatches.keys.first(), logs)
-        }
+        }*/
 
         // 3. Not found
         logs += ImportLogEntry(

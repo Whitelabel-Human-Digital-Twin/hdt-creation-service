@@ -39,7 +39,8 @@ fun Application.configureRouting() {
             try {
                 val service = CrfImportService(
                     config = CrfImportConfig(
-                        excludedSheetNames = setOf("sigle", "legend", "legenda")
+                        excludedSheetNames = setOf("sigle", "legend", "legenda"),
+                        visitDateAliases = setOf("data_dim", "data_follow_up")
                     ),
                 )
                 val result = tempFile.toFile().inputStream().use { input ->
