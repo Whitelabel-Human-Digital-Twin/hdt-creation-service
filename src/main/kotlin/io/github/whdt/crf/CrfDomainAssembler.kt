@@ -10,6 +10,7 @@ import io.github.whdt.core.hdt.model.property.Property
 import io.github.whdt.core.hdt.model.property.PropertyDescription
 import io.github.whdt.core.hdt.model.property.PropertyName
 import io.github.whdt.core.hdt.model.property.PropertyValue
+import io.github.whdt.core.hdt.model.property.PropertyValue.Companion.pv
 import io.github.whdt.crf.importer.model.ParsedVisitRow
 import io.github.whdt.crf.parser.CrfValueParser
 import io.github.whdt.crf.parser.ValueUtils.toKotlinInstantOfPattern
@@ -82,10 +83,19 @@ class CrfDomainAssembler(
             ?.value
             ?.unwrapInstant()
         if (actualBirth == null) { return hdt }
-        val deltaAge = expectedBirth - actualBirth
+        val deltaAge = (expectedBirth - actualBirth).toInt(DurationUnit.DAYS)
         return hdt.copy(
-            metadata = mapOf(
-                "delta_age" to deltaAge.toDouble(DurationUnit.DAYS).toString(),
+            models = hdt.models + Model(
+                hdtId = hdt.hdtId,
+                name = ModelName("meta"),
+                description = ModelDescription("Automatically derived properties"),
+                properties = listOf(Property(
+                    modelId = ModelId("${hdt.hdtId}:meta"),
+                    name = PropertyName("delta_age"),
+                    description = PropertyDescription("Number of days between expected and actual birth"),
+                    timestamp = actualBirth,
+                    value = deltaAge.pv()
+                ))
             )
         )
     }
