@@ -1,5 +1,6 @@
 package io.github.whdt.crf
 
+import io.github.whdt.core.hdt.model.property.PropertyId
 import io.github.whdt.crf.importer.CrfImportConfig
 import io.github.whdt.crf.importer.CrfImportService
 import kotlin.test.*
@@ -72,5 +73,10 @@ class CrfImportServiceRealWorkbookTest {
             result.report.hasErrors,
             "Did not expect structural import errors for the reference CRF workbook"
         )
+
+        val metaModel = p001.models.find { it.name.value == "meta" }
+        val deltaAge = metaModel?.properties?.find { it.name.value == "delta_age" }
+        assertNotNull(deltaAge, "Did not expect meta model")
+        assertTrue { deltaAge.id == PropertyId("P001:meta:delta_age") }
     }
 }
