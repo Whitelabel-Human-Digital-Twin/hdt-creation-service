@@ -7,7 +7,7 @@ plugins {
     kotlin("plugin.serialization") version "2.3.10"
 }
 
-group = "com.example.com"
+group = "io.github.whdt"
 version = "0.0.1"
 
 application {
@@ -44,7 +44,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
     implementation("ch.qos.logback:logback-classic:$logback_version")
 
-    implementation("io.github.whdt:whdt-core:0.6.1")
+    implementation("io.github.whdt:whdt-core:0.6.2")
     implementation("io.github.whdt:whdt-distributed:0.3.0")
     implementation("com.google.code.gson:gson:2.13.1")
 
