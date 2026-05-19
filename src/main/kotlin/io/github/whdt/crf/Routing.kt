@@ -53,9 +53,9 @@ fun Application.configureRouting() {
                         val ts = ImportLoggingUtils.timestamp()
 
                         val jsonFile = logDir.resolve("output_$ts.json")
+                        val obsFile = logDir.resolve("observations_$ts.json")
                         val reportFile = logDir.resolve("report_$ts.txt")
 
-                        // JSON output
                         val json = Json {
                             prettyPrint = true
                             encodeDefaults = true
@@ -63,6 +63,10 @@ fun Application.configureRouting() {
                         Files.writeString(
                             jsonFile,
                             json.encodeToString(result.hdts)
+                        )
+                        Files.writeString(
+                            obsFile,
+                            json.encodeToString(result.observations)
                         )
 
                         // Human readable report
@@ -77,12 +81,22 @@ fun Application.configureRouting() {
                     }
                 }
 
-                val response = client.put("http://localhost:8081/hdts/batch") {
+                val hdtResponse = client.put("http://localhost:8081/hdts/batch") {
                     contentType(ContentType.Application.Json)
                     setBody(result.hdts)
                 }
+                if (!hdtResponse.status.isSuccess()) {
+                    return@post call.respond(HttpStatusCode.InternalServerError, "HDT batch upsert failed")
+                }
 
-                if (!response.status.isSuccess()) return@post call.respond(HttpStatusCode.InternalServerError, "Unexpected response from server")
+                val obsResponse = client.post("http://localhost:8081/observations/batch") {
+                    contentType(ContentType.Application.Json)
+                    setBody(result.observations)
+                }
+                if (!obsResponse.status.isSuccess()) {
+                    return@post call.respond(HttpStatusCode.InternalServerError, "Observation batch insert failed")
+                }
+
                 call.respondText("CSV received successfully", status = HttpStatusCode.OK)
             } finally {
                 tempFile.deleteIfExists()

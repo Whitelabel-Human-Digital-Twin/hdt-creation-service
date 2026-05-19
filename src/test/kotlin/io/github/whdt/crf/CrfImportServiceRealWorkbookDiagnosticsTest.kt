@@ -33,5 +33,7 @@ class CrfImportServiceRealWorkbookDiagnosticsTest {
             result.report.entries.all { it.message.isNotBlank() },
             "Expected all report messages to be non-blank"
         )
+
+        assertTrue(result.observations.isNotEmpty(), "Expected non-empty observations from real workbook")
     }
 }
