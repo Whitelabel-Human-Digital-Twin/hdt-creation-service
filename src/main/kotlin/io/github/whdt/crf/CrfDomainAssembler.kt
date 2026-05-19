@@ -13,6 +13,7 @@ import io.github.whdt.core.hdt.model.property.PropertyObservation
 import io.github.whdt.core.hdt.model.property.PropertyValue
 import io.github.whdt.core.hdt.model.property.PropertyValue.Companion.pv
 import io.github.whdt.core.hdt.model.property.PropertyValueType
+import io.github.whdt.core.hdt.model.property.valueType
 import io.github.whdt.crf.importer.model.ParsedVisitRow
 import io.github.whdt.crf.parser.CrfValueParser
 import io.github.whdt.crf.parser.ValueUtils.toKotlinInstantOfPattern
