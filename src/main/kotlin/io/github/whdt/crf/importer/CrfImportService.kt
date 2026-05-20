@@ -1,6 +1,5 @@
 package io.github.whdt.crf.importer
 
-import io.github.whdt.crf.importer.CrfWorkbookExtractor
 import io.github.whdt.crf.CrfDomainAssembler
 import io.github.whdt.crf.importer.model.CrfImportResult
 import io.github.whdt.crf.importer.model.ImportLogEntry
@@ -28,10 +27,11 @@ class CrfImportService(
             parsedRows += result.visitRows
         }
 
-        val hdts = assembler.assemble(parsedRows)
+        val assembleResult = assembler.assemble(parsedRows)
 
         return CrfImportResult(
-            hdts = hdts,
+            hdts = assembleResult.hdts,
+            observations = assembleResult.observations,
             report = ImportReport(entries = logs)
         )
     }

@@ -62,5 +62,7 @@ class CrfImportServiceTest {
         assertEquals(2, hdt.models.size)
 
         assertTrue(result.report.entries.any { it.message.contains("excluded") })
+
+        assertTrue(result.observations.isNotEmpty(), "Expected non-empty observations for a workbook with values")
     }
 }

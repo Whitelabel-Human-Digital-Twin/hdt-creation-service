@@ -78,5 +78,21 @@ class CrfImportServiceRealWorkbookTest {
         val deltaAge = metaModel?.properties?.find { it.name.value == "delta_age" }
         assertNotNull(deltaAge, "Did not expect meta model")
         assertTrue { deltaAge.id == PropertyId("P001:meta:delta_age") }
+
+        // Observations assertions
+        assertTrue(result.observations.isNotEmpty(), "Expected non-empty observations from real workbook")
+
+        // Every observation's hdtId/modelId/propertyId should be consistent
+        result.observations.forEach { obs ->
+            assertTrue(obs.hdtId.toString().isNotBlank(), "Observation hdtId must not be blank")
+            assertTrue(obs.modelId.value.isNotBlank(), "Observation modelId must not be blank")
+            assertTrue(obs.propertyId.value.isNotBlank(), "Observation propertyId must not be blank")
+        }
+
+        // delta_age observation must exist for P001
+        val deltaAgeObs = result.observations.find {
+            it.hdtId.toString() == "P001" && it.propertyName.value == "delta_age"
+        }
+        assertNotNull(deltaAgeObs, "Expected delta_age observation for P001")
     }
 }
