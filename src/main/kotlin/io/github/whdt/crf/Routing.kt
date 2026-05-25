@@ -37,6 +37,8 @@ fun Application.configureRouting() {
             ?: "http://localhost:8081"
 
     routing {
+        get("/health") { call.respond(HttpStatusCode.OK, mapOf("status" to "ok")) }
+
         post("api/hdts/multipart") {
             val mp = call.receiveMultipart()
             val tempFile = mp.readPartAsTempFile(
