@@ -12,6 +12,7 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
+import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -28,7 +29,16 @@ fun Application.configureRouting() {
         }
     }
 
+    val persistenceServiceUrl: String =
+        environment.config
+            .propertyOrNull("app.persistenceService.url")
+            ?.getString()
+            ?.takeIf { it.isNotBlank() }
+            ?: "http://localhost:8081"
+
     routing {
+        get("/health") { call.respond(HttpStatusCode.OK, mapOf("status" to "ok")) }
+
         post("api/hdts/multipart") {
             val mp = call.receiveMultipart()
             val tempFile = mp.readPartAsTempFile(
@@ -81,7 +91,7 @@ fun Application.configureRouting() {
                     }
                 }
 
-                val hdtResponse = client.put("http://localhost:8081/hdts/batch") {
+                val hdtResponse = client.put("$persistenceServiceUrl/hdts/batch") {
                     contentType(ContentType.Application.Json)
                     setBody(result.hdts)
                 }
@@ -89,7 +99,7 @@ fun Application.configureRouting() {
                     return@post call.respond(HttpStatusCode.InternalServerError, "HDT batch upsert failed")
                 }
 
-                val obsResponse = client.post("http://localhost:8081/observations/batch") {
+                val obsResponse = client.post("$persistenceServiceUrl/observations/batch") {
                     contentType(ContentType.Application.Json)
                     setBody(result.observations)
                 }

@@ -1,0 +1,11 @@
+.git
+.github
+.gradle
+build
+*/build
+.idea
+*.iml
+*.log
+logs/
+.DS_Store
+README.md
