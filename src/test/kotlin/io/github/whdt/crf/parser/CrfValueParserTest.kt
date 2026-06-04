@@ -1,6 +1,6 @@
 package io.github.whdt.crf.parser
 
-import io.github.whdt.core.hdt.model.property.PropertyValue
+import io.github.ktwinx.core.hdt.model.property.PropertyValue
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

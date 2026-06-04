@@ -15,13 +15,6 @@ application {
 }
 
 repositories {
-    maven {
-        url = uri("https://maven.pkg.github.com/Whitelabel-Human-Digital-Twin/whdt") // or the correct GitHub repo
-        credentials {
-            username = project.findProperty("gpr.user") as String? ?: System.getenv("GPR_USER")
-            password = project.findProperty("gpr.key") as String? ?: System.getenv("GPR_TOKEN")
-        }
-    }
     mavenCentral()
 }
 
@@ -44,8 +37,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
     implementation("ch.qos.logback:logback-classic:$logback_version")
 
-    implementation("io.github.whdt:whdt-core:0.9.0")
-    implementation("io.github.whdt:whdt-distributed:0.6.0")
+    implementation("io.github.ktwinx:ktwinx-core:0.9.0")
+    implementation("io.github.ktwinx:ktwinx-distributed:0.9.0")
     implementation("com.google.code.gson:gson:2.13.1")
 
     testImplementation("io.ktor:ktor-server-test-host")

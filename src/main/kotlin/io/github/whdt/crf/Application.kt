@@ -1,6 +1,6 @@
 package io.github.whdt.crf
 
-import io.github.whdt.distributed.serde.Stub
+import io.github.ktwinx.distributed.serde.Stub
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
