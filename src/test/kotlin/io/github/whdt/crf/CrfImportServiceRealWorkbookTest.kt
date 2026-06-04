@@ -1,6 +1,6 @@
 package io.github.whdt.crf
 
-import io.github.whdt.core.hdt.model.property.PropertyId
+import io.github.ktwinx.core.hdt.model.property.PropertyId
 import io.github.whdt.crf.importer.CrfImportConfig
 import io.github.whdt.crf.importer.CrfImportService
 import kotlin.test.*
