@@ -3,11 +3,6 @@
 FROM eclipse-temurin:23-jdk-alpine AS builder
 WORKDIR /build
 
-ARG GPR_USER
-ARG GPR_TOKEN
-ENV GPR_USER=$GPR_USER
-ENV GPR_TOKEN=$GPR_TOKEN
-
 COPY . .
 RUN ./gradlew buildFatJar --no-daemon
 
