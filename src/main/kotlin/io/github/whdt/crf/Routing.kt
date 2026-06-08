@@ -30,7 +30,7 @@ fun Application.configureRouting() {
 
     val persistenceServiceUrl: String =
         environment.config
-            .propertyOrNull("app.persistenceService.url")
+            .propertyOrNull("app.persistenceServiceUrl")
             ?.getString()
             ?.takeIf { it.isNotBlank() }
             ?: "http://localhost:8081"
