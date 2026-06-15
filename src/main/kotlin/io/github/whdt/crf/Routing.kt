@@ -116,7 +116,7 @@ fun Application.configureRouting() {
             }
         }
 
-        post("/hdts/ingest/json") {
+        post("api/hdts/json") {
             val json = try {
                 call.receive<JsonObject>()
             } catch (e: Exception) {
