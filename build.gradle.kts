@@ -40,6 +40,8 @@ dependencies {
     implementation("io.github.ktwinx:ktwinx-core:0.9.0")
     implementation("io.github.ktwinx:ktwinx-distributed:0.9.0")
     implementation("com.google.code.gson:gson:2.13.1")
+    implementation("io.ktor:ktor-server-call-logging:3.2.1")
+    implementation("io.ktor:ktor-server-status-pages:3.2.1")
 
     testImplementation("io.ktor:ktor-server-test-host")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")

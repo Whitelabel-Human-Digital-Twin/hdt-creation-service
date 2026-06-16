@@ -12,6 +12,8 @@ import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
@@ -98,8 +100,9 @@ fun Application.configureRouting() {
                     contentType(ContentType.Application.Json)
                     setBody(result.hdts)
                 }
+
                 if (!hdtResponse.status.isSuccess()) {
-                    return@post call.respond(HttpStatusCode.InternalServerError, "HDT batch upsert failed")
+                    return@post respondWithError("Hdt Batch Upsert failed", call, hdtResponse)
                 }
 
                 val obsResponse = client.post("$persistenceServiceUrl/observations/batch") {
@@ -107,7 +110,7 @@ fun Application.configureRouting() {
                     setBody(result.observations)
                 }
                 if (!obsResponse.status.isSuccess()) {
-                    return@post call.respond(HttpStatusCode.InternalServerError, "Observation batch insert failed")
+                    return@post respondWithError("Hdt Batch Upsert failed", call, obsResponse)
                 }
 
                 call.respondText("CSV received successfully", status = HttpStatusCode.OK)
@@ -140,7 +143,7 @@ fun Application.configureRouting() {
                 setBody(listOf(hdt))
             }
             if (!hdtResponse.status.isSuccess()) {
-                return@post call.respond(HttpStatusCode.InternalServerError, "HDT batch upsert failed")
+                return@post respondWithError("Hdt Batch Upsert failed", call, hdtResponse)
             }
 
             val obsResponse = client.post("$persistenceServiceUrl/observations/batch") {
@@ -148,10 +151,16 @@ fun Application.configureRouting() {
                 setBody(result.observations)
             }
             if (!obsResponse.status.isSuccess()) {
-                return@post call.respond(HttpStatusCode.InternalServerError, "Observation batch insert failed")
+                return@post respondWithError("Observation Batch insert failed", call, hdtResponse)
             }
 
             call.respond(HttpStatusCode.Created, result.hdtId)
         }
     }
+}
+
+suspend fun respondWithError(failurePrologue: String, call: RoutingCall, response: HttpResponse) {
+    val detail = response.bodyAsText()
+    call.application.log.error(failurePrologue + ": ${response.status} — $detail")
+    return call.respond(HttpStatusCode.InternalServerError, failurePrologue + ": ${response.status} — $detail")
 }

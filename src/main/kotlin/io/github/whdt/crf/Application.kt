@@ -26,6 +26,6 @@ fun Application.module() {
         allowHeader(HttpHeaders.Authorization) // (Optional)
 
     }
-
+    configureMonitoring()
     configureRouting()
 }
