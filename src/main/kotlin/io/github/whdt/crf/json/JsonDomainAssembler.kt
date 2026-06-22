@@ -44,7 +44,7 @@ class JsonDomainAssembler(private val clock: Clock = Clock.System) {
 
         for ((key, value) in json) {
             when {
-                key == "ID" || key == "Age" -> continue
+                key == "ID" -> continue
                 key == "temporalParameters" -> value.jsonArray.forEach { item ->
                     val arr = item.jsonArray
                     temporalPairs.add(arr[0].jsonPrimitive.content to arr[1].jsonPrimitive)
