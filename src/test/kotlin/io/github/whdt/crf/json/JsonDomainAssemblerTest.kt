@@ -1,17 +1,8 @@
 package io.github.whdt.crf.json
 
 import io.github.ktwinx.core.hdt.model.property.PropertyValueType
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.add
-import kotlinx.serialization.json.addJsonArray
-import kotlinx.serialization.json.buildJsonArray
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
+import kotlinx.serialization.json.*
+import kotlin.test.*
 import kotlin.time.Clock
 import kotlin.time.Instant
 
@@ -59,18 +50,18 @@ class JsonDomainAssemblerTest {
         val propertyNames = rootModel.properties.map { it.name.value }
         assertTrue("weight" in propertyNames)
         assertTrue("diagnosis" in propertyNames)
-        assertTrue(propertyNames.none { it == "ID" || it == "Age" })
+        assertTrue(propertyNames.none { it == "ID" })
     }
 
     @Test
-    fun `ID and Age are never included as properties`() {
+    fun `ID is never included as property`() {
         val json = buildJsonObject {
             put("ID", "hdt-1")
             put("Age", 30)
         }
         val result = assembler.assemble(json)
         val allPropertyNames = result.properties.map { it.name.value }
-        assertTrue(allPropertyNames.none { it == "ID" || it == "Age" })
+        assertTrue(allPropertyNames.none { it == "ID" })
     }
 
     // ─── Temporal / nonLinear pair expansion ─────────────────────────────────
@@ -309,7 +300,7 @@ class JsonDomainAssemblerTest {
         assertEquals(3, result.models.size)
 
         val rootProps = result.models.find { it.name.value == ModelNames.ROOT }!!.properties
-        assertEquals(setOf("weight", "diagnosis"), rootProps.map { it.name.value }.toSet())
+        assertEquals(setOf("Age", "weight", "diagnosis"), rootProps.map { it.name.value }.toSet())
 
         val temporalProps = result.models.find { it.name.value == ModelNames.TEMPORAL }!!.properties
         assertEquals(listOf("hr", "spo2"), temporalProps.map { it.name.value })
@@ -317,7 +308,7 @@ class JsonDomainAssemblerTest {
         val nonLinearProps = result.models.find { it.name.value == ModelNames.NON_LINEAR }!!.properties
         assertEquals(listOf("riskScore"), nonLinearProps.map { it.name.value })
 
-        assertEquals(5, result.observations.size) // weight, diagnosis, hr, spo2, riskScore
+        assertEquals(6, result.observations.size) // weight, diagnosis, hr, spo2, riskScore
         result.observations.forEach { obs ->
             assertEquals("34", obs.metadata["age"])
         }
