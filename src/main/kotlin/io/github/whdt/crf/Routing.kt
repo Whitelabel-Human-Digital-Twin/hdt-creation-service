@@ -7,6 +7,8 @@ import io.github.whdt.crf.importer.CrfImportConfig
 import io.github.whdt.crf.importer.CrfImportService
 import io.github.whdt.crf.importer.util.ImportLoggingUtils
 import io.github.whdt.crf.importer.util.readPartAsTempFile
+import io.github.whdt.crf.json.BatchImportOutcome
+import io.github.whdt.crf.json.JsonArrayImporter
 import io.github.whdt.crf.json.JsonDomainAssembler
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
@@ -23,6 +25,7 @@ import io.ktor.server.routing.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import java.nio.file.Files
 import kotlin.io.path.deleteIfExists
@@ -155,6 +158,43 @@ fun Application.configureRouting() {
             }
 
             call.respond(HttpStatusCode.Created, result.hdtId)
+        }
+
+        post("api/hdts/json/batch") {
+            val array = try {
+                call.receive<JsonArray>()
+            } catch (e: Exception) {
+                return@post call.respond(HttpStatusCode.BadRequest, "Invalid JSON array body: ${e.message}")
+            }
+
+            when (val outcome = JsonArrayImporter().import(array)) {
+                is BatchImportOutcome.EmptyInput ->
+                    call.respond(HttpStatusCode.BadRequest, "Empty array: nothing to import")
+
+                is BatchImportOutcome.ElementFailure ->
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        "Invalid element at index ${outcome.index}: ${outcome.reason}",
+                    )
+
+                is BatchImportOutcome.Success -> {
+                    val hdtResponse = client.put("$persistenceServiceUrl/hdts/batch") {
+                        contentType(ContentType.Application.Json)
+                        setBody(outcome.hdts)
+                    }
+                    if (!hdtResponse.status.isSuccess())
+                        return@post call.respond(HttpStatusCode.InternalServerError, "HDT batch upsert failed")
+
+                    val obsResponse = client.post("$persistenceServiceUrl/observations/batch") {
+                        contentType(ContentType.Application.Json)
+                        setBody(outcome.observations)
+                    }
+                    if (!obsResponse.status.isSuccess())
+                        return@post call.respond(HttpStatusCode.InternalServerError, "Observation batch insert failed")
+
+                    call.respond(HttpStatusCode.Created, outcome.hdtIds)
+                }
+            }
         }
     }
 }
