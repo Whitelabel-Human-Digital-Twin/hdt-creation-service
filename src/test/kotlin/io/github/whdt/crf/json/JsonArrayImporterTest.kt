@@ -13,9 +13,10 @@ class JsonArrayImporterTest {
     }
     private val importer = JsonArrayImporter(JsonDomainAssembler(fixedClock))
 
-    private fun validElement(id: String, age: Int = 30) = buildJsonObject {
+    private fun validElement(id: String, age: Int = 30, task: String = "nw") = buildJsonObject {
         put("ID", id)
         put("Age", age)
+        put("task", task)
         put("weight", 70.0)
     }
 
@@ -126,6 +127,17 @@ class JsonArrayImporterTest {
         assertIs<BatchImportOutcome.ElementFailure>(outcome)
         assertEquals(0, outcome.index)
         assertTrue(outcome.reason.contains("Age"), "Expected 'Age' in reason: ${outcome.reason}")
+    }
+
+    @Test
+    fun `element missing task returns ElementFailure whose reason mentions task`() {
+        val array = buildJsonArray {
+            add(buildJsonObject { put("ID", "hdt-1"); put("Age", 30) })
+        }
+        val outcome = importer.import(array)
+        assertIs<BatchImportOutcome.ElementFailure>(outcome)
+        assertEquals(0, outcome.index)
+        assertTrue(outcome.reason.contains("task"), "Expected 'task' in reason: ${outcome.reason}")
     }
 
     @Test

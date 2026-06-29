@@ -26,7 +26,7 @@ class JsonBatchRouteTest {
     fun `returns 400 when body is a JSON object not an array`() = withTestApp {
         val response = client.post("/api/hdts/json/batch") {
             contentType(ContentType.Application.Json)
-            setBody("""{"ID":"x","Age":1}""")
+            setBody("""{"ID":"x","Age":1, "task": "nw"}""")
         }
         assertEquals(HttpStatusCode.BadRequest, response.status)
     }
@@ -44,7 +44,7 @@ class JsonBatchRouteTest {
     fun `returns 400 when array contains a non-object element and response includes the index`() = withTestApp {
         val response = client.post("/api/hdts/json/batch") {
             contentType(ContentType.Application.Json)
-            setBody("""[{"ID":"x","Age":1},"not-an-object"]""")
+            setBody("""[{"ID":"x","Age":1,"task":"nw"},"not-an-object"]""")
         }
         assertEquals(HttpStatusCode.BadRequest, response.status)
         assertTrue(response.bodyAsText().contains("1"), "Expected index 1 in response body")

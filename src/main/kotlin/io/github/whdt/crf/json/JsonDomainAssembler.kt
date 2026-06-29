@@ -29,10 +29,15 @@ class JsonDomainAssembler(private val clock: Clock = Clock.System) {
     fun assemble(json: JsonObject): JsonImportResult {
         val hdtIdStr = extractRequiredString(json, "ID")
         val ageStr = extractRequiredNumber(json, "Age")
+        val taskStr = extractRequiredString(json, "task")
 
         val hdtId = HdtId(hdtIdStr)
         val timestamp = clock.now()
-        val ageMetadata = mapOf("age" to ageStr)
+        val metadata = mapOf(
+            "age" to ageStr,
+            "task" to taskStr
+        )
+
 
         val rootModelId = ModelId("$hdtIdStr:${ModelNames.ROOT}")
         val temporalModelId = ModelId("$hdtIdStr:${ModelNames.TEMPORAL}")
@@ -60,13 +65,13 @@ class JsonDomainAssembler(private val clock: Clock = Clock.System) {
         }
 
         val (rootProperties, rootObservations) = buildPropertiesAndObservations(
-            rootPairs, rootModelId, hdtId, ModelName(ModelNames.ROOT), timestamp, ageMetadata,
+            rootPairs, rootModelId, hdtId, ModelName(ModelNames.ROOT), timestamp, metadata,
         )
         val (temporalProperties, temporalObservations) = buildPropertiesAndObservations(
-            temporalPairs, temporalModelId, hdtId, ModelName(ModelNames.TEMPORAL), timestamp, ageMetadata,
+            temporalPairs, temporalModelId, hdtId, ModelName(ModelNames.TEMPORAL), timestamp, metadata,
         )
         val (nonLinearProperties, nonLinearObservations) = buildPropertiesAndObservations(
-            nonLinearPairs, nonLinearModelId, hdtId, ModelName(ModelNames.NON_LINEAR), timestamp, ageMetadata,
+            nonLinearPairs, nonLinearModelId, hdtId, ModelName(ModelNames.NON_LINEAR), timestamp, metadata,
         )
 
         val rootModel = Model(
@@ -102,7 +107,7 @@ class JsonDomainAssembler(private val clock: Clock = Clock.System) {
         hdtId: HdtId,
         modelName: ModelName,
         timestamp: Instant,
-        ageMetadata: Map<String, String>,
+        metadata: Map<String, String>,
     ): Pair<List<Property>, List<PropertyObservation>> {
         val properties = pairs.map { (key, primitive) ->
             val value = primitive.toPropertyValue()
@@ -112,6 +117,7 @@ class JsonDomainAssembler(private val clock: Clock = Clock.System) {
                 description = PropertyDescription("JSON field '$key'"),
                 declaredType = value.valueType(),
                 initialValue = value,
+                tags = metadata
             )
         }
         val observations = properties.map { property ->
@@ -123,7 +129,7 @@ class JsonDomainAssembler(private val clock: Clock = Clock.System) {
                 propertyName = property.name,
                 timestamp = timestamp,
                 value = property.initialValue!!,
-                metadata = ageMetadata,
+                metadata = metadata,
             )
         }
         return properties to observations
