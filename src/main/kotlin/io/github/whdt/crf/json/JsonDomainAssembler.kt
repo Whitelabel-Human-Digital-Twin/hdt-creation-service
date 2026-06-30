@@ -117,7 +117,6 @@ class JsonDomainAssembler(private val clock: Clock = Clock.System) {
                 description = PropertyDescription("JSON field '$key'"),
                 declaredType = value.valueType(),
                 initialValue = value,
-                tags = metadata
             )
         }
         val observations = properties.map { property ->
