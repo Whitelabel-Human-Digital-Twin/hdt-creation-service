@@ -5,7 +5,7 @@ import io.github.ktwinx.core.hdt.model.property.Property
 import io.github.ktwinx.core.hdt.model.property.PropertyObservation
 
 object ModelNames {
-    const val ROOT = "root"
+    const val ROOT = "info"
     const val TEMPORAL = "temporal"
     const val NON_LINEAR = "nonLinear"
 }

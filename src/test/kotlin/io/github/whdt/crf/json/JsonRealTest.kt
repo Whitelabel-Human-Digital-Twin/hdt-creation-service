@@ -20,7 +20,7 @@ class JsonRealTest {
         val result = assembler.assemble(jsonObject)
 
         // assert only three models imported
-        val modelNames = listOf("root", "temporal", "nonLinear")
+        val modelNames = listOf(ModelNames.ROOT, ModelNames.TEMPORAL, ModelNames.NON_LINEAR)
         val actualModelNames = result.models.map { it.name.value }
         assertEquals(modelNames, actualModelNames)
 
