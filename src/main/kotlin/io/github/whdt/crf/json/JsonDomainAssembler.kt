@@ -30,12 +30,14 @@ class JsonDomainAssembler(private val clock: Clock = Clock.System) {
         val hdtIdStr = extractRequiredString(json, "ID")
         val ageStr = extractRequiredNumber(json, "Age")
         val taskStr = extractRequiredString(json, "task")
+        val sexStr = extractRequiredString(json, "Sex")
 
         val hdtId = HdtId(hdtIdStr)
         val timestamp = clock.now()
         val metadata = mapOf(
             "age" to ageStr,
-            "task" to taskStr
+            "task" to taskStr,
+            "sex" to sexStr
         )
 
 

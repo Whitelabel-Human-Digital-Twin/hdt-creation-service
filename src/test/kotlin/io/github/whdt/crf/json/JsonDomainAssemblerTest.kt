@@ -17,11 +17,13 @@ class JsonDomainAssemblerTest {
     private fun minimalJson(
         id: String = "hdt-123",
         age: Int = 34,
-        task: String = "nw"
+        task: String = "nw",
+        sex: String = "M"
     ) = buildJsonObject {
         put("ID", id)
         put("Age", age)
         put("task", task)
+        put("Sex", sex)
     }
 
     // ─── ID / hdtId ───────────────────────────────────────────────────────────
@@ -32,6 +34,7 @@ class JsonDomainAssemblerTest {
             put("ID", "patient-42")
             put("Age", 25)
             put("task", "nw")
+            put("Sex", "M")
         }
         val result = assembler.assemble(json)
         assertEquals("patient-42", result.hdtId)
@@ -45,6 +48,7 @@ class JsonDomainAssemblerTest {
             put("ID", "hdt-1")
             put("Age", 30)
             put("task", "nw")
+            put("Sex", "M")
             put("weight", 80.5)
             put("diagnosis", "stable")
         }
@@ -63,6 +67,7 @@ class JsonDomainAssemblerTest {
             put("ID", "hdt-1")
             put("Age", 30)
             put("task", "nw")
+            put("Sex", "M")
         }
         val result = assembler.assemble(json)
         val allPropertyNames = result.properties.map { it.name.value }
@@ -77,6 +82,7 @@ class JsonDomainAssemblerTest {
             put("ID", "hdt-1")
             put("Age", 30)
             put("task", "nw")
+            put("Sex", "M")
             put("temporalParameters", buildJsonArray {
                 addJsonArray { add("hr"); add(72) }
                 addJsonArray { add("spo2"); add(98) }
@@ -95,6 +101,7 @@ class JsonDomainAssemblerTest {
             put("ID", "hdt-1")
             put("Age", 30)
             put("task", "nw")
+            put("Sex", "M")
             put("nonLinearParameters", buildJsonArray {
                 addJsonArray { add("riskScore"); add(0.42) }
             })
@@ -123,6 +130,7 @@ class JsonDomainAssemblerTest {
             put("ID", "hdt-1")
             put("Age", 30)
             put("task", "nw")
+            put("Sex", "M")
             put("someIgnoredArray", buildJsonArray { add(1); add(2); add(3) })
         }
         val result = assembler.assemble(json)
@@ -138,6 +146,7 @@ class JsonDomainAssemblerTest {
             put("ID", "hdt-123")
             put("Age", 34)
             put("task", "nw")
+            put("Sex", "M")
             put("weight", 80.5)
         }
         val result = assembler.assemble(json)
@@ -152,6 +161,7 @@ class JsonDomainAssemblerTest {
             put("ID", "hdt-123")
             put("Age", 34)
             put("task", "nw")
+            put("Sex", "M")
             put("temporalParameters", buildJsonArray {
                 addJsonArray { add("hr"); add(72) }
             })
@@ -168,6 +178,7 @@ class JsonDomainAssemblerTest {
             put("ID", "hdt-123")
             put("Age", 34)
             put("task", "nw")
+            put("Sex", "M")
             put("nonLinearParameters", buildJsonArray {
                 addJsonArray { add("riskScore"); add(0.42) }
             })
@@ -183,7 +194,7 @@ class JsonDomainAssemblerTest {
     @Test
     fun `string value infers STRING declaredType`() {
         val json = buildJsonObject {
-            put("ID", "hdt-1"); put("Age", 30); put("task", "nw")
+            put("ID", "hdt-1"); put("Age", 30); put("task", "nw"); put("Sex", "M")
             put("diagnosis", "stable")
         }
         val result = assembler.assemble(json)
@@ -194,7 +205,7 @@ class JsonDomainAssemblerTest {
     @Test
     fun `integer value infers INT declaredType`() {
         val json = buildJsonObject {
-            put("ID", "hdt-1"); put("Age", 30); put("task", "nw")
+            put("ID", "hdt-1"); put("Age", 30); put("task", "nw"); put("Sex", "M")
             put("count", 5)
         }
         val result = assembler.assemble(json)
@@ -205,7 +216,7 @@ class JsonDomainAssemblerTest {
     @Test
     fun `decimal value infers DOUBLE declaredType`() {
         val json = buildJsonObject {
-            put("ID", "hdt-1"); put("Age", 30); put("task", "nw")
+            put("ID", "hdt-1"); put("Age", 30); put("task", "nw"); put("Sex", "M")
             put("score", 0.42)
         }
         val result = assembler.assemble(json)
@@ -216,7 +227,7 @@ class JsonDomainAssemblerTest {
     @Test
     fun `boolean value infers BOOLEAN declaredType`() {
         val json = buildJsonObject {
-            put("ID", "hdt-1"); put("Age", 30); put("task", "nw")
+            put("ID", "hdt-1"); put("Age", 30); put("task", "nw"); put("Sex", "M")
             put("active", true)
         }
         val result = assembler.assemble(json)
@@ -232,6 +243,7 @@ class JsonDomainAssemblerTest {
             put("ID", "hdt-1")
             put("Age", 42)
             put("task", "nw")
+            put("Sex", "M")
             put("weight", 70)
             put("temporalParameters", buildJsonArray {
                 addJsonArray { add("hr"); add(80) }
@@ -250,6 +262,7 @@ class JsonDomainAssemblerTest {
             put("ID", "hdt-1")
             put("Age", 30)
             put("task", "follow-up")
+            put("Sex", "M")
             put("weight", 70)
             put("temporalParameters", buildJsonArray {
                 addJsonArray { add("hr"); add(80) }
@@ -263,9 +276,28 @@ class JsonDomainAssemblerTest {
     }
 
     @Test
+    fun `Sex value is written into every observation metadata`() {
+        val json = buildJsonObject {
+            put("ID", "hdt-1")
+            put("Age", 30)
+            put("task", "nw")
+            put("Sex", "F")
+            put("weight", 70)
+            put("temporalParameters", buildJsonArray {
+                addJsonArray { add("hr"); add(80) }
+            })
+        }
+        val result = assembler.assemble(json)
+        assertTrue(result.observations.isNotEmpty())
+        result.observations.forEach { obs ->
+            assertEquals("F", obs.metadata["sex"], "Expected sex=F in metadata for ${obs.propertyName.value}")
+        }
+    }
+
+    @Test
     fun `observation timestamp equals clock instant`() {
         val json = buildJsonObject {
-            put("ID", "hdt-1"); put("Age", 30); put("task", "nw")
+            put("ID", "hdt-1"); put("Age", 30); put("task", "nw"); put("Sex", "M")
             put("weight", 70)
         }
         val result = assembler.assemble(json)
@@ -304,6 +336,18 @@ class JsonDomainAssemblerTest {
     }
 
     @Test
+    fun `missing Sex throws IllegalArgumentException`() {
+        val json = buildJsonObject {
+            put("ID", "hdt-1")
+            put("Age", 30)
+            put("task", "nw")
+        }
+        assertFailsWith<IllegalArgumentException> {
+            assembler.assemble(json)
+        }
+    }
+
+    @Test
     fun `missing ID error message mentions ID`() {
         val json = buildJsonObject { put("Age", 30) }
         val ex = assertFailsWith<IllegalArgumentException> { assembler.assemble(json) }
@@ -327,6 +371,17 @@ class JsonDomainAssemblerTest {
         assertTrue(ex.message?.contains("task") == true, "Expected error message to mention 'task'")
     }
 
+    @Test
+    fun `missing Sex error message mentions Sex`() {
+        val json = buildJsonObject {
+            put("ID", "hdt-1")
+            put("Age", 30)
+            put("task", "nw")
+        }
+        val ex = assertFailsWith<IllegalArgumentException> { assembler.assemble(json) }
+        assertTrue(ex.message?.contains("Sex") == true, "Expected error message to mention 'Sex'")
+    }
+
     // ─── Full example from spec ───────────────────────────────────────────────
 
     @Test
@@ -335,6 +390,7 @@ class JsonDomainAssemblerTest {
             put("ID", "hdt-123")
             put("Age", 34)
             put("task", "baseline")
+            put("Sex", "F")
             put("temporalParameters", buildJsonArray {
                 addJsonArray { add("hr"); add(72) }
                 addJsonArray { add("spo2"); add(98) }
@@ -352,7 +408,7 @@ class JsonDomainAssemblerTest {
         assertEquals(3, result.models.size)
 
         val rootProps = result.models.find { it.name.value == ModelNames.ROOT }!!.properties
-        assertEquals(setOf("Age", "task", "weight", "diagnosis"), rootProps.map { it.name.value }.toSet())
+        assertEquals(setOf("Age", "task", "Sex", "weight", "diagnosis"), rootProps.map { it.name.value }.toSet())
 
         val temporalProps = result.models.find { it.name.value == ModelNames.TEMPORAL }!!.properties
         assertEquals(listOf("hr", "spo2"), temporalProps.map { it.name.value })
@@ -360,11 +416,12 @@ class JsonDomainAssemblerTest {
         val nonLinearProps = result.models.find { it.name.value == ModelNames.NON_LINEAR }!!.properties
         assertEquals(listOf("riskScore"), nonLinearProps.map { it.name.value })
 
-        // Age, task, weight, diagnosis (root) + hr, spo2 (temporal) + riskScore (nonLinear)
-        assertEquals(7, result.observations.size)
+        // Age, task, Sex, weight, diagnosis (root) + hr, spo2 (temporal) + riskScore (nonLinear)
+        assertEquals(8, result.observations.size)
         result.observations.forEach { obs ->
             assertEquals("34", obs.metadata["age"])
             assertEquals("baseline", obs.metadata["task"])
+            assertEquals("F", obs.metadata["sex"])
         }
     }
 }
