@@ -47,6 +47,18 @@ Multipart upload. Required field: `file` (`.xlsx`, max 30 MB).
 3. Forwards the HDT list to `http://localhost:8081/hdts/batch`.
 4. Returns `200 OK` on success.
 
+### `POST api/sensors/csv`
+
+Multipart upload of one sensor CSV = **one subject × one sensor**. Required field: `file` (`.csv`, max 64 MB). Optional text fields `patientId` / `task` / `sensor` override the values parsed from the filename.
+
+- **Identifiers** come from the filename `<patientId>_<task>_<sensor>.csv` (e.g. `01A101_nw_acc`); a non-blank form field wins over the parsed token. If any identifier is still missing → `400`.
+- **Header row** = property names, used verbatim (e.g. `sens1_x`); `declaredType = DOUBLE`, no normalization/axis parsing.
+- Builds a `Model` named `<sensor>` on HDT `<patientId>` (a shell HDT is created if absent), one `Property` per column.
+- Each data row is a frame; for frame `f` it emits one `PropertyObservation` per column with `value` = the cell, `timestamp` = a monotonic `ingestBase + f` (strictly increasing), and `metadata = { "task": task, "frame": f }`.
+- Upserts HDT+model via `PUT /hdts/batch`, then streams observations to `POST /observations/batch` in chunks of `OBSERVATION_CHUNK_SIZE` (5 000). Returns `201 Created`.
+
+Pipeline lives in `io.github.whdt.crf.csv` (`SensorCsvNaming`, `CsvSensorReader`, `CsvSensorAssembler`); parsing uses Apache Commons CSV.
+
 ## Domain: CRF format
 
 CRF = **Case Report Form** — a clinical research spreadsheet with this structure:

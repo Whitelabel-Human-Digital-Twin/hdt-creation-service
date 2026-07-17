@@ -48,6 +48,9 @@ dependencies {
 
     // Apache POI for Excel processing
     implementation("org.apache.poi:poi-ooxml:5.4.0")
+
+    // Apache Commons CSV for sensor CSV parsing
+    implementation("org.apache.commons:commons-csv:1.12.0")
 }
 
 kotlin {

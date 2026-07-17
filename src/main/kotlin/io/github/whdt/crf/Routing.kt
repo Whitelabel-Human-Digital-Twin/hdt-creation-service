@@ -5,8 +5,12 @@ import io.github.ktwinx.core.hdt.HumanDigitalTwin
 import io.github.ktwinx.distributed.serde.Stub
 import io.github.whdt.crf.importer.CrfImportConfig
 import io.github.whdt.crf.importer.CrfImportService
+import io.github.whdt.crf.csv.CsvSensorAssembler
+import io.github.whdt.crf.csv.CsvSensorReader
+import io.github.whdt.crf.csv.SensorCsvNaming
 import io.github.whdt.crf.importer.util.ImportLoggingUtils
 import io.github.whdt.crf.importer.util.readPartAsTempFile
+import io.github.whdt.crf.importer.util.readSensorMultipart
 import io.github.whdt.crf.json.BatchImportOutcome
 import io.github.whdt.crf.json.JsonArrayImporter
 import io.github.whdt.crf.json.JsonDomainAssembler
@@ -29,6 +33,9 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import java.nio.file.Files
 import kotlin.io.path.deleteIfExists
+
+/** Max observations sent per `/observations/batch` call; a full sensor file is far larger. */
+private const val OBSERVATION_CHUNK_SIZE = 5000
 
 fun Application.configureRouting() {
     val client = HttpClient(CIO) {
@@ -119,6 +126,67 @@ fun Application.configureRouting() {
                 call.respondText("CSV received successfully", status = HttpStatusCode.OK)
             } finally {
                 tempFile.deleteIfExists()
+            }
+        }
+
+        post("api/sensors/csv") {
+            val mp = call.receiveMultipart()
+            val upload = mp.readSensorMultipart(maxBytes = 64L * 1024 * 1024)
+                ?: return@post call.respond(HttpStatusCode.BadRequest, "Missing field 'file'")
+
+            try {
+                val identifiers = try {
+                    SensorCsvNaming.resolve(
+                        fileName = upload.originalFileName,
+                        patientIdOverride = upload.patientId,
+                        taskOverride = upload.task,
+                        sensorOverride = upload.sensor,
+                    )
+                } catch (e: IllegalArgumentException) {
+                    return@post call.respond(HttpStatusCode.BadRequest, e.message ?: "Invalid identifiers")
+                }
+
+                val parsed = try {
+                    upload.file.toFile().inputStream().use { input ->
+                        CsvSensorReader().read(input)
+                    }
+                } catch (e: IllegalArgumentException) {
+                    return@post call.respond(HttpStatusCode.BadRequest, "Invalid CSV: ${e.message}")
+                }
+
+                val result = try {
+                    CsvSensorAssembler().assemble(identifiers, parsed)
+                } catch (e: IllegalArgumentException) {
+                    return@post call.respond(HttpStatusCode.BadRequest, "Invalid sensor data: ${e.message}")
+                }
+
+                // Upsert the (shell) HDT and its sensor model first.
+                val hdtResponse = client.put("$persistenceServiceUrl/hdts/batch") {
+                    contentType(ContentType.Application.Json)
+                    setBody(listOf(result.hdt))
+                }
+                if (!hdtResponse.status.isSuccess()) {
+                    return@post respondWithError("Hdt Batch Upsert failed", call, hdtResponse)
+                }
+
+                // A full file is ~30k observations, too many for one request; stream in chunks.
+                for (chunk in result.observations.chunked(OBSERVATION_CHUNK_SIZE)) {
+                    val obsResponse = client.post("$persistenceServiceUrl/observations/batch") {
+                        contentType(ContentType.Application.Json)
+                        setBody(chunk)
+                    }
+                    if (!obsResponse.status.isSuccess()) {
+                        return@post respondWithError("Observation Batch insert failed", call, obsResponse)
+                    }
+                }
+
+                call.respondText(
+                    "Ingested sensor '${identifiers.sensor}' for patient '${identifiers.patientId}': " +
+                        "${parsed.frames.size} frames, ${result.observations.size} observations",
+                    status = HttpStatusCode.Created,
+                )
+            } finally {
+                upload.file.deleteIfExists()
             }
         }
 
