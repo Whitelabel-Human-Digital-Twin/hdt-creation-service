@@ -47,7 +47,7 @@ Multipart upload. Required field: `file` (`.xlsx`, max 30 MB).
 3. Forwards the HDT list to `http://localhost:8081/hdts/batch`.
 4. Returns `200 OK` on success.
 
-### `POST api/sensors/csv`
+### `POST api/hdts/sensor/multipart`
 
 Multipart upload of one sensor CSV = **one subject × one sensor**. Required field: `file` (`.csv`, max 64 MB). Optional text fields `patientId` / `task` / `sensor` override the values parsed from the filename.
 
