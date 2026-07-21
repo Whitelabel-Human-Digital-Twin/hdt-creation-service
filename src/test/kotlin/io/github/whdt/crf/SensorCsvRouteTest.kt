@@ -41,7 +41,7 @@ class SensorCsvRouteTest {
 
     @Test
     fun `returns 400 when the file field is missing`() = withTestApp {
-        val response = client.post("/api/sensors/csv") {
+        val response = client.post("/api/hdts/sensor/multipart") {
             setBody(
                 MultiPartFormDataContent(
                     formData { append("patientId", "01A101") }
@@ -55,7 +55,7 @@ class SensorCsvRouteTest {
     @Test
     fun `returns 400 when identifiers cannot be resolved`() = withTestApp {
         // Filename has no parseable tokens and no override fields are supplied.
-        val response = client.post("/api/sensors/csv") {
+        val response = client.post("/api/hdts/sensor/multipart") {
             setBody(MultiPartFormDataContent(filePart("a,b\n1.0,2.0", "weird-name.csv")))
         }
         assertEquals(HttpStatusCode.BadRequest, response.status)
@@ -64,7 +64,7 @@ class SensorCsvRouteTest {
 
     @Test
     fun `returns 400 for a non-numeric CSV body`() = withTestApp {
-        val response = client.post("/api/sensors/csv") {
+        val response = client.post("/api/hdts/sensor/multipart") {
             setBody(MultiPartFormDataContent(filePart("a,b\n1.0,oops", "01A101_nw_acc.csv")))
         }
         assertEquals(HttpStatusCode.BadRequest, response.status)
@@ -73,7 +73,7 @@ class SensorCsvRouteTest {
 
     @Test
     fun `returns 400 when a sensor override contains a colon`() = withTestApp {
-        val response = client.post("/api/sensors/csv") {
+        val response = client.post("/api/hdts/sensor/multipart") {
             setBody(
                 MultiPartFormDataContent(
                     filePart("a,b\n1.0,2.0", "01A101_nw_acc.csv") + formData {

@@ -129,7 +129,7 @@ fun Application.configureRouting() {
             }
         }
 
-        post("api/sensors/csv") {
+        post("api/hdts/sensor/multipart") {
             val mp = call.receiveMultipart()
             val upload = mp.readSensorMultipart(maxBytes = 64L * 1024 * 1024)
                 ?: return@post call.respond(HttpStatusCode.BadRequest, "Missing field 'file'")

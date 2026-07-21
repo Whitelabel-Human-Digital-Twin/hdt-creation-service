@@ -70,7 +70,7 @@ class SensorCsvIngestIntegrationTest {
                 }
             }
 
-            val response = client.post("/api/sensors/csv") {
+            val response = client.post("/api/hdts/sensor/multipart") {
                 setBody(
                     MultiPartFormDataContent(
                         formData {
