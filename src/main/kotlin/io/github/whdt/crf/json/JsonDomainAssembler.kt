@@ -36,7 +36,7 @@ class JsonDomainAssembler(private val clock: Clock = Clock.System) {
         val timestamp = clock.now()
         val metadata = mapOf(
             "age" to ageStr,
-            "task" to taskStr.lowercase(),
+            "task" to taskStr.uppercase(),
             "sex" to sexStr.uppercase()
         )
 

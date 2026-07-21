@@ -271,7 +271,7 @@ class JsonDomainAssemblerTest {
         val result = assembler.assemble(json)
         assertTrue(result.observations.isNotEmpty())
         result.observations.forEach { obs ->
-            assertEquals("follow-up", obs.metadata["task"], "Expected task=follow-up in metadata for ${obs.propertyName.value}")
+            assertEquals("FOLLOW-UP", obs.metadata["task"], "Expected task=follow-up in metadata for ${obs.propertyName.value}")
         }
     }
 
@@ -420,7 +420,7 @@ class JsonDomainAssemblerTest {
         assertEquals(8, result.observations.size)
         result.observations.forEach { obs ->
             assertEquals("34", obs.metadata["age"])
-            assertEquals("baseline", obs.metadata["task"])
+            assertEquals("BASELINE", obs.metadata["task"])
             assertEquals("F", obs.metadata["sex"])
         }
     }
