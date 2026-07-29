@@ -58,6 +58,7 @@ class CsvSensorAssembler(private val clock: Clock = Clock.System) {
             name = modelName,
             description = ModelDescription("Sensor '${identifiers.sensor}' time series ingested from CSV"),
             properties = properties,
+            tags = SensorModelTags.forSensorCsv,
         )
 
         val hdt = HumanDigitalTwin(hdtId = hdtId, models = listOf(model))
