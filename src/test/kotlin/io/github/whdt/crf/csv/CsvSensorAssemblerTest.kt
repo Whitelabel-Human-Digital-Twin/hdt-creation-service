@@ -1,6 +1,10 @@
 package io.github.whdt.crf.csv
 
+import io.github.ktwinx.core.hdt.HumanDigitalTwin
 import io.github.ktwinx.core.hdt.model.property.PropertyValueType
+import io.github.ktwinx.distributed.serde.Stub
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -105,6 +109,22 @@ class CsvSensorAssemblerTest {
         assertEquals(9, result.hdt.models.single().properties.size)
         assertEquals(frameCount * 9, result.observations.size)
         assertTrue(result.observations.all { it.metadata["task"] == "nw" })
+    }
+
+    @Test
+    fun `assembled model is tagged with sensorCsv origin`() {
+        val result = assembler.assemble(ids, sampleCsv())
+        assertEquals(mapOf("origin" to "sensorCsv"), result.hdt.models.single().tags)
+    }
+
+    @Test
+    fun `origin tag survives Stub hdtJson encode-decode round trip`() {
+        val result = assembler.assemble(ids, sampleCsv())
+
+        val encoded = Stub.hdtJson.encodeToString(result.hdt)
+        val decoded = Stub.hdtJson.decodeFromString<HumanDigitalTwin>(encoded)
+
+        assertEquals(mapOf("origin" to "sensorCsv"), decoded.models.single().tags)
     }
 
     @Test
