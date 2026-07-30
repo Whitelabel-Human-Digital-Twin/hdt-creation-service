@@ -17,4 +17,5 @@ data class ParsedPropertyCell(
     val propertyName: String,
     val propertyId: String,
     val rawValue: String,
+    val columnIndex: Int,
 )

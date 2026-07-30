@@ -37,8 +37,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
     implementation("ch.qos.logback:logback-classic:$logback_version")
 
-    implementation("io.github.ktwinx:ktwinx-core:0.9.0")
-    implementation("io.github.ktwinx:ktwinx-distributed:0.9.0")
+    implementation("io.github.ktwinx:ktwinx-core:0.10.0")
+    implementation("io.github.ktwinx:ktwinx-distributed:0.10.0")
     implementation("com.google.code.gson:gson:2.13.1")
     implementation("io.ktor:ktor-server-call-logging:3.2.1")
     implementation("io.ktor:ktor-server-status-pages:3.2.1")

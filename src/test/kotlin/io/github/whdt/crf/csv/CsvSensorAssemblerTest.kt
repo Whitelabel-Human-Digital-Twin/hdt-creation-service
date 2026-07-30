@@ -128,6 +128,12 @@ class CsvSensorAssemblerTest {
     }
 
     @Test
+    fun `property ordinals equal the column index and match the columns order`() {
+        val model = assembler.assemble(ids, sampleCsv()).hdt.models.single()
+        assertEquals(listOf(0, 1, 2), model.properties.map { it.ordinal })
+    }
+
+    @Test
     fun `a sensor name containing a colon is rejected`() {
         val bad = ids.copy(sensor = "acc:1")
         assertFailsWith<IllegalArgumentException> {

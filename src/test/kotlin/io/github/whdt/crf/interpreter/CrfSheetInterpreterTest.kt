@@ -170,6 +170,37 @@ class CrfSheetInterpreterTest {
     }
 
     @Test
+    fun `ordinal is the header column index, stable across patients despite a blank cell gap`() {
+        val interpreter = interpreter()
+
+        val sheet = RawSheet(
+            originalName = "Baseline",
+            rows = listOf(
+                RawRow(0, mapOf(0 to "ID PAZIENTE", 1 to "Data visita", 2 to "Peso", 3 to "Altezza")),
+                // P001 has a blank middle column (Peso), so its only property is "altezza".
+                RawRow(1, mapOf(0 to "P001", 1 to "01/01/2025", 2 to "", 3 to "170")),
+                RawRow(2, mapOf(0 to "P002", 1 to "01/01/2025", 2 to "70", 3 to "175")),
+            )
+        )
+
+        val result = interpreter.interpret(sheet)
+        val byPatient = result.visitRows.associateBy { it.patientId }
+
+        val p001Altezza = byPatient.getValue("P001").properties.single { it.propertyName == "altezza" }
+        val p002Altezza = byPatient.getValue("P002").properties.single { it.propertyName == "altezza" }
+
+        // The trailing property keeps the same header-column-derived ordinal for both
+        // patients, even though P001's blank "Peso" column shifts its list position.
+        assertEquals(3, p001Altezza.columnIndex)
+        assertEquals(3, p002Altezza.columnIndex)
+
+        // P001 has a single property whose ordinal (3) is not 0..n-1 contiguous: it's
+        // sparse because the blank "Peso" column left a gap at index 2.
+        assertEquals(1, byPatient.getValue("P001").properties.size)
+        assertEquals(listOf(3), byPatient.getValue("P001").properties.map { it.columnIndex })
+    }
+
+    @Test
     fun `normalizes model and property names`() {
         val interpreter = interpreter()
 

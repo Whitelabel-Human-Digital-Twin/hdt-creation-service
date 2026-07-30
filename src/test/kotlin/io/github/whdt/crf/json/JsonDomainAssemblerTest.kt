@@ -423,5 +423,79 @@ class JsonDomainAssemblerTest {
             assertEquals("BASELINE", obs.metadata["task"])
             assertEquals("F", obs.metadata["sex"])
         }
+
+        // Traversal order after "ID" (skipped, no ordinal) is:
+        // Age, task, Sex (root), then temporalParameters expands hr, spo2 (temporal)
+        // in place, then nonLinearParameters expands riskScore (nonLinear) in place,
+        // then weight, diagnosis (root); someIgnoredArray is ignored and consumes no ordinal.
+        // => Age=0, task=1, Sex=2, hr=3, spo2=4, riskScore=5, weight=6, diagnosis=7
+        val ordinalsByName = result.properties.associate { it.name.value to it.ordinal }
+        assertEquals(
+            mapOf(
+                "Age" to 0,
+                "task" to 1,
+                "Sex" to 2,
+                "hr" to 3,
+                "spo2" to 4,
+                "riskScore" to 5,
+                "weight" to 6,
+                "diagnosis" to 7,
+            ),
+            ordinalsByName,
+        )
+    }
+
+    // ─── Ordinal assignment ───────────────────────────────────────────────────
+
+    @Test
+    fun `ID consumes no ordinal, first emitted property has ordinal 0`() {
+        val json = buildJsonObject {
+            put("ID", "hdt-1")
+            put("Age", 30)
+            put("task", "nw")
+            put("Sex", "M")
+        }
+        val result = assembler.assemble(json)
+        val ageProp = result.properties.find { it.name.value == "Age" }!!
+        assertEquals(0, ageProp.ordinal)
+    }
+
+    @Test
+    fun `ignored non-primitive array consumes no ordinal so following field is contiguous`() {
+        val json = buildJsonObject {
+            put("ID", "hdt-1")
+            put("Age", 30)
+            put("task", "nw")
+            put("Sex", "M")
+            put("someIgnoredArray", buildJsonArray { add(1); add(2); add(3) })
+            put("weight", 70)
+        }
+        val result = assembler.assemble(json)
+        val ordinalsByName = result.properties.associate { it.name.value to it.ordinal }
+        // Sex=2 immediately precedes weight; someIgnoredArray must not consume ordinal 3.
+        assertEquals(2, ordinalsByName["Sex"])
+        assertEquals(3, ordinalsByName["weight"])
+    }
+
+    @Test
+    fun `ordinals across all three models form a contiguous 0 to n-1 sequence with no duplicates or gaps`() {
+        val json = buildJsonObject {
+            put("ID", "hdt-1")
+            put("Age", 30)
+            put("task", "nw")
+            put("Sex", "M")
+            put("temporalParameters", buildJsonArray {
+                addJsonArray { add("hr"); add(72) }
+                addJsonArray { add("spo2"); add(98) }
+            })
+            put("nonLinearParameters", buildJsonArray {
+                addJsonArray { add("riskScore"); add(0.42) }
+            })
+            put("weight", 80.5)
+            put("diagnosis", "stable")
+        }
+        val result = assembler.assemble(json)
+        val ordinals = result.properties.map { it.ordinal }.sorted()
+        assertEquals((0 until result.properties.size).toList(), ordinals)
     }
 }

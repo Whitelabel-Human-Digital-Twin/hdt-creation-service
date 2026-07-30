@@ -123,7 +123,8 @@ class CrfSheetInterpreter(
                         originalHeader = originalHeader,
                         propertyName = propertyName,
                         propertyId = "$modelId:$propertyName",
-                        rawValue = rawValue.trim()
+                        rawValue = rawValue.trim(),
+                        columnIndex = colIndex,
                     )
                 }
                 .toList()
