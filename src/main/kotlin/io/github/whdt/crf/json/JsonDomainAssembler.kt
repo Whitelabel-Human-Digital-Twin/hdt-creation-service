@@ -26,6 +26,8 @@ import kotlin.time.Instant
 
 class JsonDomainAssembler(private val clock: Clock = Clock.System) {
 
+    private data class OrdinalPair(val key: String, val value: JsonPrimitive, val ordinal: Int)
+
     fun assemble(json: JsonObject): JsonImportResult {
         val hdtIdStr = extractRequiredString(json, "ID")
         val ageStr = extractRequiredNumber(json, "Age")
@@ -45,24 +47,25 @@ class JsonDomainAssembler(private val clock: Clock = Clock.System) {
         val temporalModelId = ModelId("$hdtIdStr:${ModelNames.TEMPORAL}")
         val nonLinearModelId = ModelId("$hdtIdStr:${ModelNames.NON_LINEAR}")
 
-        val rootPairs = mutableListOf<Pair<String, JsonPrimitive>>()
-        val temporalPairs = mutableListOf<Pair<String, JsonPrimitive>>()
-        val nonLinearPairs = mutableListOf<Pair<String, JsonPrimitive>>()
+        val rootPairs = mutableListOf<OrdinalPair>()
+        val temporalPairs = mutableListOf<OrdinalPair>()
+        val nonLinearPairs = mutableListOf<OrdinalPair>()
 
+        var ordinal = 0
         for ((key, value) in json) {
             when {
                 key == "ID" -> continue
                 key == "temporalParameters" -> value.jsonArray.forEach { item ->
                     val arr = item.jsonArray
-                    temporalPairs.add(arr[0].jsonPrimitive.content to arr[1].jsonPrimitive)
+                    temporalPairs.add(OrdinalPair(arr[0].jsonPrimitive.content, arr[1].jsonPrimitive, ordinal++))
                 }
                 key == "nonLinearParameters" -> value.jsonArray.forEach { item ->
                     val arr = item.jsonArray
-                    nonLinearPairs.add(arr[0].jsonPrimitive.content to arr[1].jsonPrimitive)
+                    nonLinearPairs.add(OrdinalPair(arr[0].jsonPrimitive.content, arr[1].jsonPrimitive, ordinal++))
                 }
-                value is JsonPrimitive -> rootPairs.add(key to value)
-                value is JsonArray -> { /* ignored */ }
-                else -> { /* ignored */ }
+                value is JsonPrimitive -> rootPairs.add(OrdinalPair(key, value, ordinal++))
+                value is JsonArray -> { /* ignored, consumes no ordinal */ }
+                else -> { /* ignored, consumes no ordinal */ }
             }
         }
 
@@ -104,21 +107,22 @@ class JsonDomainAssembler(private val clock: Clock = Clock.System) {
     }
 
     private fun buildPropertiesAndObservations(
-        pairs: List<Pair<String, JsonPrimitive>>,
+        pairs: List<OrdinalPair>,
         modelId: ModelId,
         hdtId: HdtId,
         modelName: ModelName,
         timestamp: Instant,
         metadata: Map<String, String>,
     ): Pair<List<Property>, List<PropertyObservation>> {
-        val properties = pairs.map { (key, primitive) ->
-            val value = primitive.toPropertyValue()
+        val properties = pairs.map { pair ->
+            val value = pair.value.toPropertyValue()
             Property(
                 modelId = modelId,
-                name = PropertyName(key),
-                description = PropertyDescription("JSON field '$key'"),
+                name = PropertyName(pair.key),
+                description = PropertyDescription("JSON field '${pair.key}'"),
                 declaredType = value.valueType(),
                 initialValue = value,
+                ordinal = pair.ordinal,
             )
         }
         val observations = properties.map { property ->

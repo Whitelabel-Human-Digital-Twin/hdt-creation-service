@@ -50,6 +50,7 @@ class CsvSensorAssembler(private val clock: Clock = Clock.System) {
                 declaredType = PropertyValueType.DOUBLE,
                 // Seed the model with the first frame's value for this channel, if any.
                 initialValue = parsed.frames.firstOrNull()?.get(columnIndex)?.pv(),
+                ordinal = columnIndex,
             )
         }
 

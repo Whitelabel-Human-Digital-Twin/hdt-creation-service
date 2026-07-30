@@ -27,7 +27,8 @@ class CrfDomainAssemblerTest {
                         originalHeader = "Peso",
                         propertyName = "peso",
                         propertyId = "P001:baseline:peso",
-                        rawValue = "2.5"
+                        rawValue = "2.5",
+                        columnIndex = 2,
                     )
                 )
             ),
@@ -43,7 +44,8 @@ class CrfDomainAssemblerTest {
                         originalHeader = "Altezza",
                         propertyName = "altezza",
                         propertyId = "P001:follow_up_3_mesi:altezza",
-                        rawValue = "55"
+                        rawValue = "55",
+                        columnIndex = 3,
                     )
                 )
             )
@@ -90,7 +92,8 @@ class CrfDomainAssemblerTest {
                     originalHeader = "Peso alla visita",
                     propertyName = "peso_alla_visita",
                     propertyId = "P001:baseline:peso_alla_visita",
-                    rawValue = "2.7"
+                    rawValue = "2.7",
+                    columnIndex = 2,
                 )
             )
         )
@@ -118,7 +121,8 @@ class CrfDomainAssemblerTest {
                     originalHeader = "Peso",
                     propertyName = "peso",
                     propertyId = "P001:baseline:peso",
-                    rawValue = "2.5"
+                    rawValue = "2.5",
+                    columnIndex = 2,
                 )
             )
         )
@@ -143,13 +147,15 @@ class CrfDomainAssemblerTest {
                     originalHeader = "Peso",
                     propertyName = "peso",
                     propertyId = "P001:baseline:peso",
-                    rawValue = "2.5"
+                    rawValue = "2.5",
+                    columnIndex = 2,
                 ),
                 ParsedPropertyCell(
                     originalHeader = "Altezza",
                     propertyName = "altezza",
                     propertyId = "P001:baseline:altezza",
-                    rawValue = "50"
+                    rawValue = "50",
+                    columnIndex = 3,
                 )
             )
         )
@@ -175,13 +181,15 @@ class CrfDomainAssemblerTest {
                         originalHeader = "Epoca Presunta Parto",
                         propertyName = "epoca_presunta_parto",
                         propertyId = "P001:baseline:epoca_presunta_parto",
-                        rawValue = "2024-03-15"
+                        rawValue = "2024-03-15",
+                        columnIndex = 2,
                     ),
                     ParsedPropertyCell(
                         originalHeader = "Data di Nascita",
                         propertyName = "data_di_nascita",
                         propertyId = "P001:baseline:data_di_nascita",
-                        rawValue = "2024-03-20"
+                        rawValue = "2024-03-20",
+                        columnIndex = 3,
                     )
                 )
             )
@@ -192,6 +200,44 @@ class CrfDomainAssemblerTest {
         val deltaAgeObs = result.observations.find { it.propertyName.value == "delta_age" }
         assertNotNull(deltaAgeObs, "Expected delta_age observation")
         assertEquals("P001:meta", deltaAgeObs.modelId.value)
+    }
+
+    @Test
+    fun `delta_age property keeps the default unassigned ordinal`() {
+        val rows = listOf(
+            ParsedVisitRow(
+                patientId = "P001",
+                originalSheetName = "Baseline",
+                modelName = "baseline",
+                modelId = "P001:baseline",
+                timestamp = Instant.parse("2025-01-01T00:00:00Z"),
+                sourceRowIndex = 1,
+                properties = listOf(
+                    ParsedPropertyCell(
+                        originalHeader = "Epoca Presunta Parto",
+                        propertyName = "epoca_presunta_parto",
+                        propertyId = "P001:baseline:epoca_presunta_parto",
+                        rawValue = "2024-03-15",
+                        columnIndex = 2,
+                    ),
+                    ParsedPropertyCell(
+                        originalHeader = "Data di Nascita",
+                        propertyName = "data_di_nascita",
+                        propertyId = "P001:baseline:data_di_nascita",
+                        rawValue = "2024-03-20",
+                        columnIndex = 3,
+                    )
+                )
+            )
+        )
+
+        val result = assembler.assemble(rows)
+
+        val metaModel = result.hdts.first().models.find { it.name.value == "meta" }
+        assertNotNull(metaModel)
+        val deltaAgeProperty = metaModel.properties.find { it.name.value == "delta_age" }
+        assertNotNull(deltaAgeProperty)
+        assertEquals(-1, deltaAgeProperty.ordinal)
     }
 
     @Test
@@ -208,7 +254,8 @@ class CrfDomainAssemblerTest {
                     originalHeader = "Peso",
                     propertyName = "peso",
                     propertyId = "P001:baseline:peso",
-                    rawValue = "42"
+                    rawValue = "42",
+                    columnIndex = 2,
                 )
             )
         )
@@ -217,5 +264,39 @@ class CrfDomainAssemblerTest {
         val property = result.hdts.first().models.first().properties.first()
 
         assertNotNull(property.initialValue, "Expected non-null initialValue")
+    }
+
+    @Test
+    fun `property ordinal equals the source cell column index`() {
+        val row = ParsedVisitRow(
+            patientId = "P001",
+            originalSheetName = "Baseline",
+            modelName = "baseline",
+            modelId = "P001:baseline",
+            timestamp = Instant.parse("2025-01-01T00:00:00Z"),
+            sourceRowIndex = 1,
+            properties = listOf(
+                ParsedPropertyCell(
+                    originalHeader = "Peso",
+                    propertyName = "peso",
+                    propertyId = "P001:baseline:peso",
+                    rawValue = "2.5",
+                    columnIndex = 2,
+                ),
+                ParsedPropertyCell(
+                    originalHeader = "Altezza",
+                    propertyName = "altezza",
+                    propertyId = "P001:baseline:altezza",
+                    rawValue = "50",
+                    columnIndex = 4,
+                )
+            )
+        )
+
+        val result = assembler.assemble(listOf(row))
+        val properties = result.hdts.first().models.first().properties
+
+        assertEquals(2, properties.find { it.name.value == "peso" }!!.ordinal)
+        assertEquals(4, properties.find { it.name.value == "altezza" }!!.ordinal)
     }
 }

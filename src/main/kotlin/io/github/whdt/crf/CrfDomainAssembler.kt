@@ -73,6 +73,7 @@ class CrfDomainAssembler(
                 description = PropertyDescription("Imported from column '${cell.originalHeader}' in sheet '$originalSheetName'"),
                 declaredType = parsedValue.valueType(),
                 initialValue = parsedValue,
+                ordinal = cell.columnIndex,
             )
         }
 
